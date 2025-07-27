@@ -1,0 +1,22 @@
+{
+  "name": "route-optimization-tool",
+  "version": "1.0.0",
+  "description": "Map-based route optimization tool for PVC pipe distributors",
+  "scripts": {
+    "start": "parcel index.html",
+    "build": "parcel build index.html",
+    "dev": "parcel index.html --open"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@parcel/transformer-sass": "^2.9.3",
+    "parcel": "^2.9.3"
+  },
+  "keywords": ["route-optimization", "mapping", "logistics"],
+  "author": "Your Name",
+  "license": "MIT"
+} 
