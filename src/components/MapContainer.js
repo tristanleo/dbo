@@ -202,22 +202,6 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
   return (
     <div className="map-container">
       <div ref={mapRef} className="map" />
-      
-      <div className="map-controls">
-        <h4>Map Controls</h4>
-        <div className="control-group">
-          <label>Show Territories</label>
-          <input type="checkbox" defaultChecked />
-        </div>
-        <div className="control-group">
-          <label>Show Routes</label>
-          <input type="checkbox" defaultChecked />
-        </div>
-        <div className="control-group">
-          <label>High Priority Only</label>
-          <input type="checkbox" />
-        </div>
-      </div>
     </div>
   );
 };
