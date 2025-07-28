@@ -160,11 +160,11 @@
       });
     }
   }
-})({"lBLFF":[function(require,module,exports,__globalThis) {
+})({"5j6Kf":[function(require,module,exports,__globalThis) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = null;
-var HMR_SERVER_PORT = 51236;
+var HMR_SERVER_PORT = 1234;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "439701173a9199ea";
 var HMR_USE_SSE = false;
@@ -27939,104 +27939,15 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
     };
     return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
         className: "map-container",
-        children: [
-            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-                ref: mapRef,
-                className: "map"
-            }, void 0, false, {
-                fileName: "src/components/MapContainer.js",
-                lineNumber: 204,
-                columnNumber: 7
-            }, undefined),
-            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-                className: "map-controls",
-                children: [
-                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("h4", {
-                        children: "Map Controls"
-                    }, void 0, false, {
-                        fileName: "src/components/MapContainer.js",
-                        lineNumber: 207,
-                        columnNumber: 9
-                    }, undefined),
-                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-                        className: "control-group",
-                        children: [
-                            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("label", {
-                                children: "Show Territories"
-                            }, void 0, false, {
-                                fileName: "src/components/MapContainer.js",
-                                lineNumber: 209,
-                                columnNumber: 11
-                            }, undefined),
-                            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("input", {
-                                type: "checkbox",
-                                defaultChecked: true
-                            }, void 0, false, {
-                                fileName: "src/components/MapContainer.js",
-                                lineNumber: 210,
-                                columnNumber: 11
-                            }, undefined)
-                        ]
-                    }, void 0, true, {
-                        fileName: "src/components/MapContainer.js",
-                        lineNumber: 208,
-                        columnNumber: 9
-                    }, undefined),
-                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-                        className: "control-group",
-                        children: [
-                            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("label", {
-                                children: "Show Routes"
-                            }, void 0, false, {
-                                fileName: "src/components/MapContainer.js",
-                                lineNumber: 213,
-                                columnNumber: 11
-                            }, undefined),
-                            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("input", {
-                                type: "checkbox",
-                                defaultChecked: true
-                            }, void 0, false, {
-                                fileName: "src/components/MapContainer.js",
-                                lineNumber: 214,
-                                columnNumber: 11
-                            }, undefined)
-                        ]
-                    }, void 0, true, {
-                        fileName: "src/components/MapContainer.js",
-                        lineNumber: 212,
-                        columnNumber: 9
-                    }, undefined),
-                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-                        className: "control-group",
-                        children: [
-                            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("label", {
-                                children: "High Priority Only"
-                            }, void 0, false, {
-                                fileName: "src/components/MapContainer.js",
-                                lineNumber: 217,
-                                columnNumber: 11
-                            }, undefined),
-                            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("input", {
-                                type: "checkbox"
-                            }, void 0, false, {
-                                fileName: "src/components/MapContainer.js",
-                                lineNumber: 218,
-                                columnNumber: 11
-                            }, undefined)
-                        ]
-                    }, void 0, true, {
-                        fileName: "src/components/MapContainer.js",
-                        lineNumber: 216,
-                        columnNumber: 9
-                    }, undefined)
-                ]
-            }, void 0, true, {
-                fileName: "src/components/MapContainer.js",
-                lineNumber: 206,
-                columnNumber: 7
-            }, undefined)
-        ]
-    }, void 0, true, {
+        children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
+            ref: mapRef,
+            className: "map"
+        }, void 0, false, {
+            fileName: "src/components/MapContainer.js",
+            lineNumber: 204,
+            columnNumber: 7
+        }, undefined)
+    }, void 0, false, {
         fileName: "src/components/MapContainer.js",
         lineNumber: 203,
         columnNumber: 5
@@ -39214,6 +39125,6 @@ $RefreshReg$(_c, "Footer");
   globalThis.$RefreshReg$ = prevRefreshReg;
   globalThis.$RefreshSig$ = prevRefreshSig;
 }
-},{"react/jsx-dev-runtime":"dVPUn","react":"jMk1U","./Footer.css":"eWrmH","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"eWrmH":[function() {},{}],"goyoj":[function() {},{}],"clPKd":[function() {},{}]},["lBLFF","a0t4e"], "a0t4e", "parcelRequire1e2c", {}, null, null, "http://localhost:51236")
+},{"react/jsx-dev-runtime":"dVPUn","react":"jMk1U","./Footer.css":"eWrmH","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"eWrmH":[function() {},{}],"goyoj":[function() {},{}],"clPKd":[function() {},{}]},["5j6Kf","a0t4e"], "a0t4e", "parcelRequire1e2c", {}, null, null, "http://localhost:1234")
 
 //# sourceMappingURL=dbo.31b563d9.js.map
