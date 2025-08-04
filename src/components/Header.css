@@ -43,4 +43,21 @@
 .salesmen-selector select:focus {
   outline: none;
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+}
+
+.generate-clusters-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.generate-clusters-btn:hover {
+  background: #c0392b;
+  transform: translateY(-1px);
 } 

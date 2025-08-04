@@ -3,8 +3,7 @@ import Header from './components/Header';
 import LeftSidebar from './components/LeftSidebar';
 import MapContainer from './components/MapContainer';
 import RightSidebar from './components/RightSidebar';
-import Footer from './components/Footer';
-import { generateSampleData } from './utils/sampleData';
+import { generateSampleData, generateOptimizedClusters } from './utils/sampleData';
 import './styles/App.css';
 
 function App() {
@@ -58,6 +57,33 @@ function App() {
     setTerritories(updatedTerritories);
   };
 
+  const handleGenerateClusters = () => {
+    const { territoriesData } = generateOptimizedClusters(shops, salesmenCount);
+    setTerritories(territoriesData);
+    setSelectedTerritory(territoriesData[0]);
+  };
+
+  const handleShopsSelected = (selectedShopIds, territoryId) => {
+    // Move selected shops to the specified territory
+    const updatedTerritories = territories.map(territory => {
+      if (territory.id === territoryId) {
+        // Add selected shops to this territory
+        const shopsToAdd = shops.filter(shop => selectedShopIds.includes(shop.id));
+        return {
+          ...territory,
+          shops: [...territory.shops, ...shopsToAdd]
+        };
+      } else {
+        // Remove selected shops from other territories
+        return {
+          ...territory,
+          shops: territory.shops.filter(shop => !selectedShopIds.includes(shop.id))
+        };
+      }
+    });
+    setTerritories(updatedTerritories);
+  };
+
   const toggleLeftSidebar = () => {
     setLeftSidebarCollapsed(!leftSidebarCollapsed);
   };
@@ -71,6 +97,7 @@ function App() {
       <Header 
         salesmenCount={salesmenCount}
         onSalesmenChange={handleSalesmenChange}
+        onGenerateClusters={handleGenerateClusters}
       />
       
       <LeftSidebar 
@@ -87,6 +114,7 @@ function App() {
         selectedTerritory={selectedTerritory}
         mapData={mapData}
         onShopMove={handleShopMove}
+        onShopsSelected={handleShopsSelected}
       />
       
       <RightSidebar 
@@ -95,8 +123,6 @@ function App() {
         collapsed={rightSidebarCollapsed}
         onToggle={toggleRightSidebar}
       />
-      
-      <Footer />
     </div>
   );
 }

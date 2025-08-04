@@ -76,6 +76,107 @@ export const generateSampleData = (salesmenCount) => {
   };
 };
 
+// Optimized clustering algorithm using K-means
+export const generateOptimizedClusters = (shops, salesmenCount) => {
+  if (shops.length === 0 || salesmenCount <= 0) {
+    return { territoriesData: [] };
+  }
+
+  // Initialize centroids randomly
+  const centroids = [];
+  for (let i = 0; i < salesmenCount; i++) {
+    const randomShop = shops[Math.floor(Math.random() * shops.length)];
+    centroids.push([randomShop.coordinates[0], randomShop.coordinates[1]]);
+  }
+
+  // K-means clustering
+  let iterations = 0;
+  const maxIterations = 100;
+  let hasChanged = true;
+  let finalClusters = [];
+
+  while (hasChanged && iterations < maxIterations) {
+    hasChanged = false;
+    iterations++;
+
+    // Assign shops to nearest centroid
+    const clusters = Array.from({ length: salesmenCount }, () => []);
+    
+    shops.forEach(shop => {
+      let minDistance = Infinity;
+      let nearestCentroid = 0;
+      
+      centroids.forEach((centroid, index) => {
+        const distance = calculateDistance(
+          shop.coordinates[0], 
+          shop.coordinates[1], 
+          centroid[0], 
+          centroid[1]
+        );
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestCentroid = index;
+        }
+      });
+      
+      clusters[nearestCentroid].push(shop);
+    });
+
+    // Update centroids
+    const newCentroids = centroids.map((centroid, index) => {
+      if (clusters[index].length === 0) return centroid;
+      
+      const avgLat = clusters[index].reduce((sum, shop) => sum + shop.coordinates[0], 0) / clusters[index].length;
+      const avgLng = clusters[index].reduce((sum, shop) => sum + shop.coordinates[1], 0) / clusters[index].length;
+      
+      const newCentroid = [avgLat, avgLng];
+      const hasMoved = Math.abs(newCentroid[0] - centroid[0]) > 0.001 || Math.abs(newCentroid[1] - centroid[1]) > 0.001;
+      
+      if (hasMoved) hasChanged = true;
+      return newCentroid;
+    });
+
+    if (hasChanged) {
+      centroids.splice(0, centroids.length, ...newCentroids);
+    }
+    
+    // Store the final clusters
+    finalClusters = clusters;
+  }
+
+  // Create territories from clusters
+  const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'];
+  const salesmenNames = [
+    'John Doe', 'Jane Smith', 'Mike Johnson', 
+    'Sarah Wilson', 'David Brown', 'Lisa Davis'
+  ];
+
+  const territoriesData = finalClusters.map((cluster, index) => {
+    if (cluster.length === 0) return null;
+
+    const centerLat = cluster.reduce((sum, shop) => sum + shop.coordinates[0], 0) / cluster.length;
+    const centerLng = cluster.reduce((sum, shop) => sum + shop.coordinates[1], 0) / cluster.length;
+    
+    // Calculate total distance (simplified)
+    const totalDistance = cluster.length * 5 + Math.random() * 20; // km
+    const estimatedTime = totalDistance / 15; // Assuming 15 km/h average
+    
+    return {
+      id: `territory_${index + 1}`,
+      name: salesmenNames[index],
+      salesmanId: `salesman_${index + 1}`,
+      shops: cluster,
+      center: [centerLat, centerLng],
+      color: colors[index % colors.length],
+      totalDistance: Math.round(totalDistance * 10) / 10,
+      estimatedTime: Math.round(estimatedTime * 10) / 10,
+      shopCount: cluster.length
+    };
+  }).filter(territory => territory !== null);
+
+  return { territoriesData };
+};
+
 // Calculate distance between two points using Haversine formula
 export const calculateDistance = (lat1, lng1, lat2, lng2) => {
   const R = 6371; // Earth's radius in kilometers

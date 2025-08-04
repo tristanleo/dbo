@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './MapContainer.css';
@@ -11,11 +11,12 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMove }) => {
+const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMove, onShopsSelected }) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef({});
   const territoryLayersRef = useRef({});
+  const [isLassoActive, setIsLassoActive] = useState(false);
 
   useEffect(() => {
     if (!mapInstanceRef.current) {
@@ -46,8 +47,14 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
     });
     markersRef.current = {};
 
-    Object.values(territoryLayersRef.current).forEach(layer => {
-      mapInstanceRef.current.removeLayer(layer);
+    // Clear all existing territory layers and labels
+    Object.values(territoryLayersRef.current).forEach(territoryData => {
+      if (territoryData.polygon) {
+        mapInstanceRef.current.removeLayer(territoryData.polygon);
+      }
+      if (territoryData.label) {
+        mapInstanceRef.current.removeLayer(territoryData.label);
+      }
     });
     territoryLayersRef.current = {};
 
@@ -69,7 +76,7 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
 
           // Add territory label
           const center = territory.center;
-          L.marker(center, {
+          const territoryLabel = L.marker(center, {
             icon: L.divIcon({
               className: 'territory-label',
               html: `<div style="background: ${territory.color}; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px;">${territory.name}</div>`,
@@ -78,7 +85,11 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
             })
           }).addTo(mapInstanceRef.current);
 
-          territoryLayersRef.current[territory.id] = territoryLayer;
+          // Store both the polygon and label for this territory
+          territoryLayersRef.current[territory.id] = {
+            polygon: territoryLayer,
+            label: territoryLabel
+          };
         }
       }
     });
@@ -199,9 +210,29 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
     return closest;
   };
 
+  const handleShopsSelected = (selectedMarkers, territoryId) => {
+    const selectedShopIds = selectedMarkers.map(marker => {
+      // Find the shop ID from the marker
+      for (const [shopId, markerRef] of Object.entries(markersRef.current)) {
+        if (markerRef === marker) {
+          return shopId;
+        }
+      }
+      return null;
+    }).filter(id => id !== null);
+    
+    onShopsSelected(selectedShopIds, territoryId);
+  };
+
   return (
-    <div className="map-container">
+    <div className={`map-container ${isLassoActive ? 'lasso-active' : ''}`}>
       <div ref={mapRef} className="map" />
+      {/* Temporarily disabled lasso selector to fix Leaflet errors */}
+      {/* <LassoSelector 
+        mapInstance={mapInstanceRef.current}
+        onShopsSelected={handleShopsSelected}
+        selectedTerritory={selectedTerritory}
+      /> */}
     </div>
   );
 };

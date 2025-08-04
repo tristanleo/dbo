@@ -24965,8 +24965,6 @@ var _mapContainer = require("./components/MapContainer");
 var _mapContainerDefault = parcelHelpers.interopDefault(_mapContainer);
 var _rightSidebar = require("./components/RightSidebar");
 var _rightSidebarDefault = parcelHelpers.interopDefault(_rightSidebar);
-var _footer = require("./components/Footer");
-var _footerDefault = parcelHelpers.interopDefault(_footer);
 var _sampleData = require("./utils/sampleData");
 var _appCss = require("./styles/App.css");
 var _s = $RefreshSig$();
@@ -25022,6 +25020,32 @@ function App() {
         });
         setTerritories(updatedTerritories);
     };
+    const handleGenerateClusters = ()=>{
+        const { territoriesData } = (0, _sampleData.generateOptimizedClusters)(shops, salesmenCount);
+        setTerritories(territoriesData);
+        setSelectedTerritory(territoriesData[0]);
+    };
+    const handleShopsSelected = (selectedShopIds, territoryId)=>{
+        // Move selected shops to the specified territory
+        const updatedTerritories = territories.map((territory)=>{
+            if (territory.id === territoryId) {
+                // Add selected shops to this territory
+                const shopsToAdd = shops.filter((shop)=>selectedShopIds.includes(shop.id));
+                return {
+                    ...territory,
+                    shops: [
+                        ...territory.shops,
+                        ...shopsToAdd
+                    ]
+                };
+            } else // Remove selected shops from other territories
+            return {
+                ...territory,
+                shops: territory.shops.filter((shop)=>!selectedShopIds.includes(shop.id))
+            };
+        });
+        setTerritories(updatedTerritories);
+    };
     const toggleLeftSidebar = ()=>{
         setLeftSidebarCollapsed(!leftSidebarCollapsed);
     };
@@ -25033,10 +25057,11 @@ function App() {
         children: [
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _headerDefault.default), {
                 salesmenCount: salesmenCount,
-                onSalesmenChange: handleSalesmenChange
+                onSalesmenChange: handleSalesmenChange,
+                onGenerateClusters: handleGenerateClusters
             }, void 0, false, {
                 fileName: "src/App.js",
-                lineNumber: 71,
+                lineNumber: 97,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _leftSidebarDefault.default), {
@@ -25047,7 +25072,7 @@ function App() {
                 onToggle: toggleLeftSidebar
             }, void 0, false, {
                 fileName: "src/App.js",
-                lineNumber: 76,
+                lineNumber: 103,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _mapContainerDefault.default), {
@@ -25055,10 +25080,11 @@ function App() {
                 territories: territories,
                 selectedTerritory: selectedTerritory,
                 mapData: mapData,
-                onShopMove: handleShopMove
+                onShopMove: handleShopMove,
+                onShopsSelected: handleShopsSelected
             }, void 0, false, {
                 fileName: "src/App.js",
-                lineNumber: 84,
+                lineNumber: 111,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _rightSidebarDefault.default), {
@@ -25068,18 +25094,13 @@ function App() {
                 onToggle: toggleRightSidebar
             }, void 0, false, {
                 fileName: "src/App.js",
-                lineNumber: 92,
-                columnNumber: 7
-            }, this),
-            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _footerDefault.default), {}, void 0, false, {
-                fileName: "src/App.js",
-                lineNumber: 99,
+                lineNumber: 120,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "src/App.js",
-        lineNumber: 70,
+        lineNumber: 96,
         columnNumber: 5
     }, this);
 }
@@ -25094,7 +25115,7 @@ $RefreshReg$(_c, "App");
   globalThis.$RefreshReg$ = prevRefreshReg;
   globalThis.$RefreshSig$ = prevRefreshSig;
 }
-},{"react/jsx-dev-runtime":"dVPUn","react":"jMk1U","./components/Header":"3PJ6N","./components/LeftSidebar":"2dfAQ","./components/MapContainer":"bfhnA","./components/RightSidebar":"5cE8b","./components/Footer":"lq1kZ","./utils/sampleData":"jDeCa","./styles/App.css":"goyoj","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"3PJ6N":[function(require,module,exports,__globalThis) {
+},{"react/jsx-dev-runtime":"dVPUn","react":"jMk1U","./components/Header":"3PJ6N","./components/LeftSidebar":"2dfAQ","./components/MapContainer":"bfhnA","./components/RightSidebar":"5cE8b","./utils/sampleData":"jDeCa","./styles/App.css":"goyoj","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"3PJ6N":[function(require,module,exports,__globalThis) {
 var $parcel$ReactRefreshHelpers$d118 = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
 $parcel$ReactRefreshHelpers$d118.init();
 var prevRefreshReg = globalThis.$RefreshReg$;
@@ -25108,18 +25129,15 @@ var _jsxDevRuntime = require("react/jsx-dev-runtime");
 var _react = require("react");
 var _reactDefault = parcelHelpers.interopDefault(_react);
 var _headerCss = require("./Header.css");
-const Header = ({ salesmenCount, onSalesmenChange })=>{
-    const handleSalesmenChange = (e)=>{
-        onSalesmenChange(parseInt(e.target.value));
-    };
+const Header = ({ salesmenCount, onSalesmenChange, onGenerateClusters })=>{
     return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("header", {
         className: "header",
         children: [
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("h1", {
-                children: "\uD83D\uDE9A Route Optimization Tool"
+                children: "Route Optimization Tool"
             }, void 0, false, {
                 fileName: "src/components/Header.js",
-                lineNumber: 11,
+                lineNumber: 7,
                 columnNumber: 7
             }, undefined),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -25129,94 +25147,62 @@ const Header = ({ salesmenCount, onSalesmenChange })=>{
                         className: "salesmen-selector",
                         children: [
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("label", {
+                                htmlFor: "salesmen-count",
                                 children: "Salesmen:"
                             }, void 0, false, {
                                 fileName: "src/components/Header.js",
-                                lineNumber: 14,
+                                lineNumber: 11,
                                 columnNumber: 11
                             }, undefined),
                             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("select", {
+                                id: "salesmen-count",
                                 value: salesmenCount,
-                                onChange: handleSalesmenChange,
+                                onChange: (e)=>onSalesmenChange(parseInt(e.target.value)),
                                 children: [
-                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("option", {
-                                        value: 3,
-                                        children: "3"
-                                    }, void 0, false, {
-                                        fileName: "src/components/Header.js",
-                                        lineNumber: 16,
-                                        columnNumber: 13
-                                    }, undefined),
-                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("option", {
-                                        value: 4,
-                                        children: "4"
-                                    }, void 0, false, {
-                                        fileName: "src/components/Header.js",
-                                        lineNumber: 17,
-                                        columnNumber: 13
-                                    }, undefined),
-                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("option", {
-                                        value: 5,
-                                        children: "5"
-                                    }, void 0, false, {
+                                    1,
+                                    2,
+                                    3,
+                                    4,
+                                    5,
+                                    6
+                                ].map((num)=>/*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("option", {
+                                        value: num,
+                                        children: num
+                                    }, num, false, {
                                         fileName: "src/components/Header.js",
                                         lineNumber: 18,
-                                        columnNumber: 13
-                                    }, undefined),
-                                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("option", {
-                                        value: 6,
-                                        children: "6"
-                                    }, void 0, false, {
-                                        fileName: "src/components/Header.js",
-                                        lineNumber: 19,
-                                        columnNumber: 13
-                                    }, undefined)
-                                ]
-                            }, void 0, true, {
+                                        columnNumber: 15
+                                    }, undefined))
+                            }, void 0, false, {
                                 fileName: "src/components/Header.js",
-                                lineNumber: 15,
+                                lineNumber: 12,
                                 columnNumber: 11
                             }, undefined)
                         ]
                     }, void 0, true, {
                         fileName: "src/components/Header.js",
-                        lineNumber: 13,
+                        lineNumber: 10,
                         columnNumber: 9
                     }, undefined),
                     /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("button", {
-                        className: "btn btn-secondary",
-                        children: "Load"
-                    }, void 0, false, {
-                        fileName: "src/components/Header.js",
-                        lineNumber: 22,
-                        columnNumber: 9
-                    }, undefined),
-                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("button", {
-                        className: "btn btn-primary",
-                        children: "Save"
+                        className: "btn btn-primary generate-clusters-btn",
+                        onClick: onGenerateClusters,
+                        children: "\uD83C\uDFAF Generate Clusters"
                     }, void 0, false, {
                         fileName: "src/components/Header.js",
                         lineNumber: 23,
-                        columnNumber: 9
-                    }, undefined),
-                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("button", {
-                        className: "btn btn-secondary",
-                        children: "\u2699\uFE0F"
-                    }, void 0, false, {
-                        fileName: "src/components/Header.js",
-                        lineNumber: 24,
                         columnNumber: 9
                     }, undefined)
                 ]
             }, void 0, true, {
                 fileName: "src/components/Header.js",
-                lineNumber: 12,
+                lineNumber: 9,
                 columnNumber: 7
             }, undefined)
         ]
     }, void 0, true, {
         fileName: "src/components/Header.js",
-        lineNumber: 10,
+        lineNumber: 6,
         columnNumber: 5
     }, undefined);
 };
@@ -27766,12 +27752,13 @@ delete (0, _leafletDefault.default).Icon.Default.prototype._getIconUrl;
     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png'
 });
-const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMove })=>{
+const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMove, onShopsSelected })=>{
     _s();
     const mapRef = (0, _react.useRef)(null);
     const mapInstanceRef = (0, _react.useRef)(null);
     const markersRef = (0, _react.useRef)({});
     const territoryLayersRef = (0, _react.useRef)({});
+    const [isLassoActive, setIsLassoActive] = (0, _react.useState)(false);
     (0, _react.useEffect)(()=>{
         if (!mapInstanceRef.current) {
             // Initialize map
@@ -27796,8 +27783,10 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
             mapInstanceRef.current.removeLayer(marker);
         });
         markersRef.current = {};
-        Object.values(territoryLayersRef.current).forEach((layer)=>{
-            mapInstanceRef.current.removeLayer(layer);
+        // Clear all existing territory layers and labels
+        Object.values(territoryLayersRef.current).forEach((territoryData)=>{
+            if (territoryData.polygon) mapInstanceRef.current.removeLayer(territoryData.polygon);
+            if (territoryData.label) mapInstanceRef.current.removeLayer(territoryData.label);
         });
         territoryLayersRef.current = {};
         // Add territory overlays
@@ -27816,7 +27805,7 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
                     }).addTo(mapInstanceRef.current);
                     // Add territory label
                     const center = territory.center;
-                    (0, _leafletDefault.default).marker(center, {
+                    const territoryLabel = (0, _leafletDefault.default).marker(center, {
                         icon: (0, _leafletDefault.default).divIcon({
                             className: 'territory-label',
                             html: `<div style="background: ${territory.color}; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px;">${territory.name}</div>`,
@@ -27830,7 +27819,11 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
                             ]
                         })
                     }).addTo(mapInstanceRef.current);
-                    territoryLayersRef.current[territory.id] = territoryLayer;
+                    // Store both the polygon and label for this territory
+                    territoryLayersRef.current[territory.id] = {
+                        polygon: territoryLayer,
+                        label: territoryLabel
+                    };
                 }
             }
         });
@@ -27937,23 +27930,33 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
         });
         return closest;
     };
+    const handleShopsSelected = (selectedMarkers, territoryId)=>{
+        const selectedShopIds = selectedMarkers.map((marker)=>{
+            // Find the shop ID from the marker
+            for (const [shopId, markerRef] of Object.entries(markersRef.current)){
+                if (markerRef === marker) return shopId;
+            }
+            return null;
+        }).filter((id)=>id !== null);
+        onShopsSelected(selectedShopIds, territoryId);
+    };
     return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-        className: "map-container",
+        className: `map-container ${isLassoActive ? 'lasso-active' : ''}`,
         children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
             ref: mapRef,
             className: "map"
         }, void 0, false, {
             fileName: "src/components/MapContainer.js",
-            lineNumber: 204,
+            lineNumber: 229,
             columnNumber: 7
         }, undefined)
     }, void 0, false, {
         fileName: "src/components/MapContainer.js",
-        lineNumber: 203,
+        lineNumber: 228,
         columnNumber: 5
     }, undefined);
 };
-_s(MapContainer, "VBoSA9TrTQuHO+li52+hmwJFWZY=");
+_s(MapContainer, "xobXCdOGh+e1WtrY20Bd46rJJz0=");
 _c = MapContainer;
 exports.default = MapContainer;
 var _c;
@@ -38923,6 +38926,7 @@ $RefreshReg$(_c, "RightSidebar");
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "generateSampleData", ()=>generateSampleData);
+parcelHelpers.export(exports, "generateOptimizedClusters", ()=>generateOptimizedClusters);
 parcelHelpers.export(exports, "calculateDistance", ()=>calculateDistance);
 parcelHelpers.export(exports, "generateOptimizationSuggestions", ()=>generateOptimizationSuggestions);
 const generateShops = (count = 30)=>{
@@ -39005,6 +39009,103 @@ const generateSampleData = (salesmenCount)=>{
         territoriesData
     };
 };
+const generateOptimizedClusters = (shops, salesmenCount)=>{
+    if (shops.length === 0 || salesmenCount <= 0) return {
+        territoriesData: []
+    };
+    // Initialize centroids randomly
+    const centroids = [];
+    for(let i = 0; i < salesmenCount; i++){
+        const randomShop = shops[Math.floor(Math.random() * shops.length)];
+        centroids.push([
+            randomShop.coordinates[0],
+            randomShop.coordinates[1]
+        ]);
+    }
+    // K-means clustering
+    let iterations = 0;
+    const maxIterations = 100;
+    let hasChanged = true;
+    let finalClusters = [];
+    while(hasChanged && iterations < maxIterations){
+        hasChanged = false;
+        iterations++;
+        // Assign shops to nearest centroid
+        const clusters = Array.from({
+            length: salesmenCount
+        }, ()=>[]);
+        shops.forEach((shop)=>{
+            let minDistance = Infinity;
+            let nearestCentroid = 0;
+            centroids.forEach((centroid, index)=>{
+                const distance = calculateDistance(shop.coordinates[0], shop.coordinates[1], centroid[0], centroid[1]);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearestCentroid = index;
+                }
+            });
+            clusters[nearestCentroid].push(shop);
+        });
+        // Update centroids
+        const newCentroids = centroids.map((centroid, index)=>{
+            if (clusters[index].length === 0) return centroid;
+            const avgLat = clusters[index].reduce((sum, shop)=>sum + shop.coordinates[0], 0) / clusters[index].length;
+            const avgLng = clusters[index].reduce((sum, shop)=>sum + shop.coordinates[1], 0) / clusters[index].length;
+            const newCentroid = [
+                avgLat,
+                avgLng
+            ];
+            const hasMoved = Math.abs(newCentroid[0] - centroid[0]) > 0.001 || Math.abs(newCentroid[1] - centroid[1]) > 0.001;
+            if (hasMoved) hasChanged = true;
+            return newCentroid;
+        });
+        if (hasChanged) centroids.splice(0, centroids.length, ...newCentroids);
+        // Store the final clusters
+        finalClusters = clusters;
+    }
+    // Create territories from clusters
+    const colors = [
+        '#FF6B6B',
+        '#4ECDC4',
+        '#45B7D1',
+        '#96CEB4',
+        '#FFEAA7',
+        '#DDA0DD'
+    ];
+    const salesmenNames = [
+        'John Doe',
+        'Jane Smith',
+        'Mike Johnson',
+        'Sarah Wilson',
+        'David Brown',
+        'Lisa Davis'
+    ];
+    const territoriesData = finalClusters.map((cluster, index)=>{
+        if (cluster.length === 0) return null;
+        const centerLat = cluster.reduce((sum, shop)=>sum + shop.coordinates[0], 0) / cluster.length;
+        const centerLng = cluster.reduce((sum, shop)=>sum + shop.coordinates[1], 0) / cluster.length;
+        // Calculate total distance (simplified)
+        const totalDistance = cluster.length * 5 + Math.random() * 20; // km
+        const estimatedTime = totalDistance / 15; // Assuming 15 km/h average
+        return {
+            id: `territory_${index + 1}`,
+            name: salesmenNames[index],
+            salesmanId: `salesman_${index + 1}`,
+            shops: cluster,
+            center: [
+                centerLat,
+                centerLng
+            ],
+            color: colors[index % colors.length],
+            totalDistance: Math.round(totalDistance * 10) / 10,
+            estimatedTime: Math.round(estimatedTime * 10) / 10,
+            shopCount: cluster.length
+        };
+    }).filter((territory)=>territory !== null);
+    return {
+        territoriesData
+    };
+};
 const calculateDistance = (lat1, lng1, lat2, lng2)=>{
     const R = 6371; // Earth's radius in kilometers
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -39034,97 +39135,6 @@ const generateOptimizationSuggestions = (territory)=>{
     return suggestions;
 };
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"b5HKi":[function() {},{}],"lq1kZ":[function(require,module,exports,__globalThis) {
-var $parcel$ReactRefreshHelpers$a646 = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
-$parcel$ReactRefreshHelpers$a646.init();
-var prevRefreshReg = globalThis.$RefreshReg$;
-var prevRefreshSig = globalThis.$RefreshSig$;
-$parcel$ReactRefreshHelpers$a646.prelude(module);
-
-try {
-var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-parcelHelpers.defineInteropFlag(exports);
-var _jsxDevRuntime = require("react/jsx-dev-runtime");
-var _react = require("react");
-var _reactDefault = parcelHelpers.interopDefault(_react);
-var _footerCss = require("./Footer.css");
-const Footer = ()=>{
-    return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("footer", {
-        className: "footer",
-        children: [
-            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-                className: "status-indicator",
-                children: [
-                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-                        className: "status-dot"
-                    }, void 0, false, {
-                        fileName: "src/components/Footer.js",
-                        lineNumber: 8,
-                        columnNumber: 9
-                    }, undefined),
-                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("span", {
-                        children: "System Ready - All routes optimized"
-                    }, void 0, false, {
-                        fileName: "src/components/Footer.js",
-                        lineNumber: 9,
-                        columnNumber: 9
-                    }, undefined)
-                ]
-            }, void 0, true, {
-                fileName: "src/components/Footer.js",
-                lineNumber: 7,
-                columnNumber: 7
-            }, undefined),
-            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-                className: "quick-actions",
-                children: [
-                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("button", {
-                        className: "btn btn-primary",
-                        children: "Export Routes"
-                    }, void 0, false, {
-                        fileName: "src/components/Footer.js",
-                        lineNumber: 13,
-                        columnNumber: 9
-                    }, undefined),
-                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("button", {
-                        className: "btn btn-secondary",
-                        children: "Generate Report"
-                    }, void 0, false, {
-                        fileName: "src/components/Footer.js",
-                        lineNumber: 14,
-                        columnNumber: 9
-                    }, undefined),
-                    /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("button", {
-                        className: "btn btn-secondary",
-                        children: "Share Plan"
-                    }, void 0, false, {
-                        fileName: "src/components/Footer.js",
-                        lineNumber: 15,
-                        columnNumber: 9
-                    }, undefined)
-                ]
-            }, void 0, true, {
-                fileName: "src/components/Footer.js",
-                lineNumber: 12,
-                columnNumber: 7
-            }, undefined)
-        ]
-    }, void 0, true, {
-        fileName: "src/components/Footer.js",
-        lineNumber: 6,
-        columnNumber: 5
-    }, undefined);
-};
-_c = Footer;
-exports.default = Footer;
-var _c;
-$RefreshReg$(_c, "Footer");
-
-  $parcel$ReactRefreshHelpers$a646.postlude(module);
-} finally {
-  globalThis.$RefreshReg$ = prevRefreshReg;
-  globalThis.$RefreshSig$ = prevRefreshSig;
-}
-},{"react/jsx-dev-runtime":"dVPUn","react":"jMk1U","./Footer.css":"eWrmH","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"eWrmH":[function() {},{}],"goyoj":[function() {},{}],"clPKd":[function() {},{}]},["5j6Kf","a0t4e"], "a0t4e", "parcelRequire1e2c", {}, null, null, "http://localhost:1234")
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"b5HKi":[function() {},{}],"goyoj":[function() {},{}],"clPKd":[function() {},{}]},["5j6Kf","a0t4e"], "a0t4e", "parcelRequire1e2c", {}, null, null, "http://localhost:1234")
 
 //# sourceMappingURL=dbo.31b563d9.js.map
