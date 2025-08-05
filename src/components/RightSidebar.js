@@ -2,7 +2,7 @@ import React from 'react';
 import { generateOptimizationSuggestions } from '../utils/sampleData';
 import './RightSidebar.css';
 
-const RightSidebar = ({ selectedTerritory, territories, collapsed, onToggle }) => {
+const RightSidebar = ({ selectedTerritory, territories, collapsed, onToggle, isLassoActive, onLassoToggle }) => {
   const suggestions = selectedTerritory ? generateOptimizationSuggestions(selectedTerritory) : [];
 
   return (
@@ -49,8 +49,12 @@ const RightSidebar = ({ selectedTerritory, territories, collapsed, onToggle }) =
               <h3>Manual Adjustments</h3>
               <div className="manual-adjustments">
                 <button className="btn btn-primary">Reorder Stops</button>
-                <button className="btn btn-secondary">Split Territory</button>
-                <button className="btn btn-secondary">Merge Territories</button>
+                <button 
+                  className={`btn ${isLassoActive ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={onLassoToggle}
+                >
+                  {isLassoActive ? '🎯 Rectangle Tool (Active)' : '🎯 Rectangle Tool'}
+                </button>
               </div>
             </>
           ) : (

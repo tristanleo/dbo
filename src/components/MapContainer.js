@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './MapContainer.css';
+import RectangleSelector from './LassoSelector';
 
 // Fix for default markers in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -11,12 +12,11 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMove, onShopsSelected }) => {
+const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMove, onShopsSelected, isLassoActive }) => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef({});
   const territoryLayersRef = useRef({});
-  const [isLassoActive, setIsLassoActive] = useState(false);
 
   useEffect(() => {
     if (!mapInstanceRef.current) {
@@ -28,6 +28,25 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
         attribution: '© OpenStreetMap contributors'
       }).addTo(mapInstanceRef.current);
     }
+    
+    // Disable map dragging when lasso is active
+    if (mapInstanceRef.current) {
+      if (isLassoActive) {
+        mapInstanceRef.current.dragging.disable();
+        mapInstanceRef.current.scrollWheelZoom.disable();
+        mapInstanceRef.current.doubleClickZoom.disable();
+        mapInstanceRef.current.touchZoom.disable();
+        mapInstanceRef.current.boxZoom.disable();
+        mapInstanceRef.current.keyboard.disable();
+      } else {
+        mapInstanceRef.current.dragging.enable();
+        mapInstanceRef.current.scrollWheelZoom.enable();
+        mapInstanceRef.current.doubleClickZoom.enable();
+        mapInstanceRef.current.touchZoom.enable();
+        mapInstanceRef.current.boxZoom.enable();
+        mapInstanceRef.current.keyboard.enable();
+      }
+    }
 
     return () => {
       if (mapInstanceRef.current) {
@@ -35,11 +54,28 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
         mapInstanceRef.current = null;
       }
     };
-  }, []);
+  }, [isLassoActive]);
 
   // Update map when data changes
   useEffect(() => {
     if (!mapInstanceRef.current) return;
+
+    // Maintain map controls based on lasso state
+    if (isLassoActive) {
+      mapInstanceRef.current.dragging.disable();
+      mapInstanceRef.current.scrollWheelZoom.disable();
+      mapInstanceRef.current.doubleClickZoom.disable();
+      mapInstanceRef.current.touchZoom.disable();
+      mapInstanceRef.current.boxZoom.disable();
+      mapInstanceRef.current.keyboard.disable();
+    } else {
+      mapInstanceRef.current.dragging.enable();
+      mapInstanceRef.current.scrollWheelZoom.enable();
+      mapInstanceRef.current.doubleClickZoom.enable();
+      mapInstanceRef.current.touchZoom.enable();
+      mapInstanceRef.current.boxZoom.enable();
+      mapInstanceRef.current.keyboard.enable();
+    }
 
     // Add visual feedback for territory changes
     const mapContainer = mapRef.current;
@@ -172,7 +208,7 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
       mapInstanceRef.current.fitBounds(group.getBounds().pad(0.1));
     }
 
-  }, [shops, territories, selectedTerritory, onShopMove]);
+  }, [shops, territories, selectedTerritory, onShopMove, isLassoActive]);
 
   // Simple convex hull algorithm for territory boundaries
   const createConvexHull = (points) => {
@@ -242,12 +278,19 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
   return (
     <div className={`map-container ${isLassoActive ? 'lasso-active' : ''}`}>
       <div ref={mapRef} className="map" />
-      {/* Temporarily disabled lasso selector to fix Leaflet errors */}
-      {/* <LassoSelector 
-        mapInstance={mapInstanceRef.current}
-        onShopsSelected={handleShopsSelected}
-        selectedTerritory={selectedTerritory}
-      /> */}
+      {isLassoActive && mapInstanceRef.current && (
+        <RectangleSelector 
+          mapInstance={mapInstanceRef.current}
+          onShopsSelected={handleShopsSelected}
+          selectedTerritory={selectedTerritory}
+          markersRef={markersRef.current}
+        />
+      )}
+      {isLassoActive && console.log('LassoSelector props:', {
+        mapInstance: !!mapInstanceRef.current,
+        selectedTerritory: selectedTerritory?.name,
+        markersCount: Object.keys(markersRef.current || {}).length
+      })}
     </div>
   );
 };

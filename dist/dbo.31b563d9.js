@@ -160,11 +160,11 @@
       });
     }
   }
-})({"jQxEw":[function(require,module,exports,__globalThis) {
+})({"2u1gL":[function(require,module,exports,__globalThis) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = null;
-var HMR_SERVER_PORT = 58747;
+var HMR_SERVER_PORT = 51570;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "439701173a9199ea";
 var HMR_USE_SSE = false;
@@ -24984,6 +24984,8 @@ function App() {
     // Sidebar collapse states
     const [leftSidebarCollapsed, setLeftSidebarCollapsed] = (0, _react.useState)(false);
     const [rightSidebarCollapsed, setRightSidebarCollapsed] = (0, _react.useState)(false);
+    // Lasso tool state
+    const [isLassoActive, setIsLassoActive] = (0, _react.useState)(false);
     // Initialize with sample data
     (0, _react.useEffect)(()=>{
         const { shopsData, territoriesData } = (0, _sampleData.generateSampleData)(salesmenCount);
@@ -25040,31 +25042,102 @@ function App() {
         }, 500);
     };
     const handleShopsSelected = (selectedShopIds, territoryId)=>{
-        // Move selected shops to the specified territory
-        const updatedTerritories = territories.map((territory)=>{
-            if (territory.id === territoryId) {
-                // Add selected shops to this territory
-                const shopsToAdd = shops.filter((shop)=>selectedShopIds.includes(shop.id));
-                return {
-                    ...territory,
-                    shops: [
+        // Find the territory to assign shops to
+        const targetTerritory = territories.find((t)=>t.id === territoryId);
+        if (targetTerritory) {
+            // Move selected shops to the specified territory
+            const selectedShops = shops.filter((shop)=>selectedShopIds.includes(shop.id));
+            const updatedTerritories = territories.map((territory)=>{
+                if (territory.id === territoryId) {
+                    // Add selected shops to this territory
+                    const updatedShops = [
                         ...territory.shops,
-                        ...shopsToAdd
-                    ]
-                };
-            } else // Remove selected shops from other territories
-            return {
-                ...territory,
-                shops: territory.shops.filter((shop)=>!selectedShopIds.includes(shop.id))
-            };
-        });
-        setTerritories(updatedTerritories);
+                        ...selectedShops
+                    ];
+                    return {
+                        ...territory,
+                        shops: updatedShops,
+                        center: calculateCenter(updatedShops.map((shop)=>shop.coordinates)),
+                        totalDistance: calculateTotalDistance(updatedShops),
+                        estimatedTime: Math.round(calculateTotalDistance(updatedShops) / 15 * 10) / 10,
+                        shopCount: updatedShops.length
+                    };
+                } else {
+                    // Remove selected shops from other territories
+                    const filteredShops = territory.shops.filter((shop)=>!selectedShopIds.includes(shop.id));
+                    return {
+                        ...territory,
+                        shops: filteredShops,
+                        center: calculateCenter(filteredShops.map((shop)=>shop.coordinates)),
+                        totalDistance: calculateTotalDistance(filteredShops),
+                        estimatedTime: Math.round(calculateTotalDistance(filteredShops) / 15 * 10) / 10,
+                        shopCount: filteredShops.length
+                    };
+                }
+            });
+            setTerritories(updatedTerritories);
+            setSelectedTerritory(updatedTerritories.find((t)=>t.id === territoryId));
+        }
     };
     const toggleLeftSidebar = ()=>{
         setLeftSidebarCollapsed(!leftSidebarCollapsed);
     };
     const toggleRightSidebar = ()=>{
         setRightSidebarCollapsed(!rightSidebarCollapsed);
+    };
+    // Helper functions for territory creation
+    const getRandomColor = ()=>{
+        const colors = [
+            '#e74c3c',
+            '#3498db',
+            '#2ecc71',
+            '#f39c12',
+            '#9b59b6',
+            '#1abc9c'
+        ];
+        return colors[Math.floor(Math.random() * colors.length)];
+    };
+    const calculateCenter = (coordinates)=>{
+        if (coordinates.length === 0) return [
+            0,
+            0
+        ];
+        const sumLat = coordinates.reduce((sum, coord)=>sum + coord[0], 0);
+        const sumLng = coordinates.reduce((sum, coord)=>sum + coord[1], 0);
+        return [
+            sumLat / coordinates.length,
+            sumLng / coordinates.length
+        ];
+    };
+    const calculateTotalDistance = (selectedShops)=>{
+        if (selectedShops.length < 2) return 0;
+        let totalDistance = 0;
+        for(let i = 0; i < selectedShops.length - 1; i++){
+            const shop1 = selectedShops[i];
+            const shop2 = selectedShops[i + 1];
+            const distance = Math.sqrt(Math.pow(shop1.coordinates[0] - shop2.coordinates[0], 2) + Math.pow(shop1.coordinates[1] - shop2.coordinates[1], 2)) * 111; // Convert to km (roughly)
+            totalDistance += distance;
+        }
+        return Math.round(totalDistance * 10) / 10;
+    };
+    const toggleLasso = ()=>{
+        if (!isLassoActive) {
+            // Clear shop assignments but keep salesman structure
+            const clearedTerritories = territories.map((territory)=>({
+                    ...territory,
+                    shops: [],
+                    center: [
+                        0,
+                        0
+                    ],
+                    totalDistance: 0,
+                    estimatedTime: 0,
+                    shopCount: 0
+                }));
+            setTerritories(clearedTerritories);
+            setSelectedTerritory(null);
+        }
+        setIsLassoActive(!isLassoActive);
     };
     return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
         className: "app-container",
@@ -25075,7 +25148,7 @@ function App() {
                 onGenerateClusters: handleGenerateClusters
             }, void 0, false, {
                 fileName: "src/App.js",
-                lineNumber: 113,
+                lineNumber: 178,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _leftSidebarDefault.default), {
@@ -25086,7 +25159,7 @@ function App() {
                 onToggle: toggleLeftSidebar
             }, void 0, false, {
                 fileName: "src/App.js",
-                lineNumber: 119,
+                lineNumber: 184,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _mapContainerDefault.default), {
@@ -25095,30 +25168,33 @@ function App() {
                 selectedTerritory: selectedTerritory,
                 mapData: mapData,
                 onShopMove: handleShopMove,
-                onShopsSelected: handleShopsSelected
+                onShopsSelected: handleShopsSelected,
+                isLassoActive: isLassoActive
             }, void 0, false, {
                 fileName: "src/App.js",
-                lineNumber: 127,
+                lineNumber: 192,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _rightSidebarDefault.default), {
                 selectedTerritory: selectedTerritory,
                 territories: territories,
                 collapsed: rightSidebarCollapsed,
-                onToggle: toggleRightSidebar
+                onToggle: toggleRightSidebar,
+                isLassoActive: isLassoActive,
+                onLassoToggle: toggleLasso
             }, void 0, false, {
                 fileName: "src/App.js",
-                lineNumber: 136,
+                lineNumber: 202,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "src/App.js",
-        lineNumber: 112,
+        lineNumber: 177,
         columnNumber: 5
     }, this);
 }
-_s(App, "orm3FwvtaolOe8ekXSNgD12w+Z0=");
+_s(App, "yy3wu33OT/xi2I1Iz1kvGeO5yd8=");
 _c = App;
 exports.default = App;
 var _c;
@@ -27758,6 +27834,8 @@ var _leaflet = require("leaflet");
 var _leafletDefault = parcelHelpers.interopDefault(_leaflet);
 var _leafletCss = require("leaflet/dist/leaflet.css");
 var _mapContainerCss = require("./MapContainer.css");
+var _lassoSelector = require("./LassoSelector");
+var _lassoSelectorDefault = parcelHelpers.interopDefault(_lassoSelector);
 var _s = $RefreshSig$();
 // Fix for default markers in Leaflet
 delete (0, _leafletDefault.default).Icon.Default.prototype._getIconUrl;
@@ -27766,13 +27844,12 @@ delete (0, _leafletDefault.default).Icon.Default.prototype._getIconUrl;
     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png'
 });
-const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMove, onShopsSelected })=>{
+const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMove, onShopsSelected, isLassoActive })=>{
     _s();
     const mapRef = (0, _react.useRef)(null);
     const mapInstanceRef = (0, _react.useRef)(null);
     const markersRef = (0, _react.useRef)({});
     const territoryLayersRef = (0, _react.useRef)({});
-    const [isLassoActive, setIsLassoActive] = (0, _react.useState)(false);
     (0, _react.useEffect)(()=>{
         if (!mapInstanceRef.current) {
             // Initialize map
@@ -27782,16 +27859,52 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
                 attribution: "\xa9 OpenStreetMap contributors"
             }).addTo(mapInstanceRef.current);
         }
+        // Disable map dragging when lasso is active
+        if (mapInstanceRef.current) {
+            if (isLassoActive) {
+                mapInstanceRef.current.dragging.disable();
+                mapInstanceRef.current.scrollWheelZoom.disable();
+                mapInstanceRef.current.doubleClickZoom.disable();
+                mapInstanceRef.current.touchZoom.disable();
+                mapInstanceRef.current.boxZoom.disable();
+                mapInstanceRef.current.keyboard.disable();
+            } else {
+                mapInstanceRef.current.dragging.enable();
+                mapInstanceRef.current.scrollWheelZoom.enable();
+                mapInstanceRef.current.doubleClickZoom.enable();
+                mapInstanceRef.current.touchZoom.enable();
+                mapInstanceRef.current.boxZoom.enable();
+                mapInstanceRef.current.keyboard.enable();
+            }
+        }
         return ()=>{
             if (mapInstanceRef.current) {
                 mapInstanceRef.current.remove();
                 mapInstanceRef.current = null;
             }
         };
-    }, []);
+    }, [
+        isLassoActive
+    ]);
     // Update map when data changes
     (0, _react.useEffect)(()=>{
         if (!mapInstanceRef.current) return;
+        // Maintain map controls based on lasso state
+        if (isLassoActive) {
+            mapInstanceRef.current.dragging.disable();
+            mapInstanceRef.current.scrollWheelZoom.disable();
+            mapInstanceRef.current.doubleClickZoom.disable();
+            mapInstanceRef.current.touchZoom.disable();
+            mapInstanceRef.current.boxZoom.disable();
+            mapInstanceRef.current.keyboard.disable();
+        } else {
+            mapInstanceRef.current.dragging.enable();
+            mapInstanceRef.current.scrollWheelZoom.enable();
+            mapInstanceRef.current.doubleClickZoom.enable();
+            mapInstanceRef.current.touchZoom.enable();
+            mapInstanceRef.current.boxZoom.enable();
+            mapInstanceRef.current.keyboard.enable();
+        }
         // Add visual feedback for territory changes
         const mapContainer = mapRef.current;
         if (mapContainer) {
@@ -27917,7 +28030,8 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
         shops,
         territories,
         selectedTerritory,
-        onShopMove
+        onShopMove,
+        isLassoActive
     ]);
     // Simple convex hull algorithm for territory boundaries
     const createConvexHull = (points)=>{
@@ -27969,21 +28083,38 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
     };
     return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
         className: `map-container ${isLassoActive ? 'lasso-active' : ''}`,
-        children: /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
-            ref: mapRef,
-            className: "map"
-        }, void 0, false, {
-            fileName: "src/components/MapContainer.js",
-            lineNumber: 244,
-            columnNumber: 7
-        }, undefined)
-    }, void 0, false, {
+        children: [
+            /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
+                ref: mapRef,
+                className: "map"
+            }, void 0, false, {
+                fileName: "src/components/MapContainer.js",
+                lineNumber: 280,
+                columnNumber: 7
+            }, undefined),
+            isLassoActive && mapInstanceRef.current && /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)((0, _lassoSelectorDefault.default), {
+                mapInstance: mapInstanceRef.current,
+                onShopsSelected: handleShopsSelected,
+                selectedTerritory: selectedTerritory,
+                markersRef: markersRef.current
+            }, void 0, false, {
+                fileName: "src/components/MapContainer.js",
+                lineNumber: 282,
+                columnNumber: 9
+            }, undefined),
+            isLassoActive && console.log('LassoSelector props:', {
+                mapInstance: !!mapInstanceRef.current,
+                selectedTerritory: selectedTerritory?.name,
+                markersCount: Object.keys(markersRef.current || {}).length
+            })
+        ]
+    }, void 0, true, {
         fileName: "src/components/MapContainer.js",
-        lineNumber: 243,
+        lineNumber: 279,
         columnNumber: 5
     }, undefined);
 };
-_s(MapContainer, "xobXCdOGh+e1WtrY20Bd46rJJz0=");
+_s(MapContainer, "VBoSA9TrTQuHO+li52+hmwJFWZY=");
 _c = MapContainer;
 exports.default = MapContainer;
 var _c;
@@ -27994,7 +28125,7 @@ $RefreshReg$(_c, "MapContainer");
   globalThis.$RefreshReg$ = prevRefreshReg;
   globalThis.$RefreshSig$ = prevRefreshSig;
 }
-},{"react/jsx-dev-runtime":"dVPUn","react":"jMk1U","leaflet":"gzvEd","leaflet/dist/leaflet.css":"6JhOO","./MapContainer.css":"7TDX7","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"gzvEd":[function(require,module,exports,__globalThis) {
+},{"react/jsx-dev-runtime":"dVPUn","react":"jMk1U","leaflet":"gzvEd","leaflet/dist/leaflet.css":"6JhOO","./MapContainer.css":"7TDX7","./LassoSelector":"3ec6L","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"gzvEd":[function(require,module,exports,__globalThis) {
 /* @preserve
  * Leaflet 1.9.4, a JS library for interactive maps. https://leafletjs.com
  * (c) 2010-2023 Vladimir Agafonkin, (c) 2010-2011 CloudMade
@@ -38590,7 +38721,229 @@ $RefreshReg$(_c, "MapContainer");
     window.L = exports1;
 });
 
-},{}],"6JhOO":[function() {},{}],"7TDX7":[function() {},{}],"5cE8b":[function(require,module,exports,__globalThis) {
+},{}],"6JhOO":[function() {},{}],"7TDX7":[function() {},{}],"3ec6L":[function(require,module,exports,__globalThis) {
+var $parcel$ReactRefreshHelpers$4dd3 = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
+$parcel$ReactRefreshHelpers$4dd3.init();
+var prevRefreshReg = globalThis.$RefreshReg$;
+var prevRefreshSig = globalThis.$RefreshSig$;
+$parcel$ReactRefreshHelpers$4dd3.prelude(module);
+
+try {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _jsxDevRuntime = require("react/jsx-dev-runtime");
+var _react = require("react");
+var _reactDefault = parcelHelpers.interopDefault(_react);
+var _leaflet = require("leaflet");
+var _leafletDefault = parcelHelpers.interopDefault(_leaflet);
+var _lassoSelectorCss = require("./LassoSelector.css");
+var _s = $RefreshSig$();
+const RectangleSelector = ({ mapInstance, onShopsSelected, selectedTerritory, markersRef })=>{
+    _s();
+    const [isDrawing, setIsDrawing] = (0, _react.useState)(false);
+    const [startPoint, setStartPoint] = (0, _react.useState)(null);
+    const [rectangleLayer, setRectangleLayer] = (0, _react.useState)(null);
+    const [selectedShops, setSelectedShops] = (0, _react.useState)([]);
+    const isDrawingRef = (0, _react.useRef)(false);
+    const rectangleLayerRef = (0, _react.useRef)(null);
+    // Get the target territory (selected or first available)
+    const targetTerritory = selectedTerritory || {
+        name: 'Budi Santoso',
+        color: '#FF6B6B'
+    };
+    (0, _react.useEffect)(()=>{
+        if (!mapInstance) return;
+        const handleMouseDown = (e)=>{
+            // Allow drawing even without a selected territory when rectangle tool is active
+            // The territory will be created based on the selected shops
+            console.log('Rectangle mouse down:', e.latlng);
+            try {
+                isDrawingRef.current = true;
+                setIsDrawing(true);
+                setStartPoint(e.latlng);
+                setSelectedShops([]);
+                // Create rectangle layer with more visible styling
+                const bounds = (0, _leafletDefault.default).latLngBounds(e.latlng, e.latlng);
+                const newRectangleLayer = (0, _leafletDefault.default).rectangle(bounds, {
+                    color: '#e74c3c',
+                    weight: 4,
+                    opacity: 1,
+                    fillColor: '#e74c3c',
+                    fillOpacity: 0.3,
+                    dashArray: '15, 8'
+                });
+                // Explicitly add to map
+                newRectangleLayer.addTo(mapInstance);
+                setRectangleLayer(newRectangleLayer);
+                rectangleLayerRef.current = newRectangleLayer;
+                console.log('Rectangle layer created and added to map', {
+                    layer: newRectangleLayer,
+                    bounds: newRectangleLayer.getBounds(),
+                    mapLayers: mapInstance.getLayers().length
+                });
+                // Also create a simple polyline as backup for visibility
+                const backupLine = (0, _leafletDefault.default).polyline([
+                    e.latlng,
+                    e.latlng
+                ], {
+                    color: '#ff0000',
+                    weight: 6,
+                    opacity: 1
+                }).addTo(mapInstance);
+                console.log('Backup line created for visibility');
+            } catch (error) {
+                console.warn('Rectangle drawing failed:', error);
+                isDrawingRef.current = false;
+                setIsDrawing(false);
+            }
+        };
+        const handleMouseMove = (e)=>{
+            if (!isDrawingRef.current || !startPoint) return;
+            try {
+                if (rectangleLayerRef.current) {
+                    // Update rectangle bounds
+                    const bounds = (0, _leafletDefault.default).latLngBounds(startPoint, e.latlng);
+                    rectangleLayerRef.current.setBounds(bounds);
+                    console.log('Rectangle bounds updated:', bounds, 'start:', startPoint, 'current:', e.latlng);
+                } else console.warn('Rectangle layer is null during mouse move');
+            } catch (error) {
+                console.warn('Rectangle movement failed:', error);
+            }
+        };
+        const handleMouseUp = ()=>{
+            if (!isDrawingRef.current || !startPoint) return;
+            try {
+                isDrawingRef.current = false;
+                setIsDrawing(false);
+                // Get the final bounds of the rectangle
+                const finalBounds = rectangleLayerRef.current ? rectangleLayerRef.current.getBounds() : null;
+                if (finalBounds) {
+                    // Find shops within the rectangle area
+                    const shopsInRectangle = findShopsInRectangle(finalBounds);
+                    setSelectedShops(shopsInRectangle);
+                    console.log('Rectangle completed:', {
+                        bounds: finalBounds,
+                        shopsFound: shopsInRectangle.length,
+                        shops: shopsInRectangle
+                    });
+                    if (shopsInRectangle.length > 0) {
+                        // Use the first available territory if none is selected
+                        const territoryId = selectedTerritory ? selectedTerritory.id : 'territory_1';
+                        onShopsSelected(shopsInRectangle, territoryId);
+                    }
+                }
+                // Remove rectangle layer
+                if (rectangleLayerRef.current) {
+                    mapInstance.removeLayer(rectangleLayerRef.current);
+                    setRectangleLayer(null);
+                    rectangleLayerRef.current = null;
+                }
+                setStartPoint(null);
+            } catch (error) {
+                console.warn('Rectangle completion failed:', error);
+                isDrawingRef.current = false;
+                setIsDrawing(false);
+            }
+        };
+        mapInstance.on('mousedown', handleMouseDown);
+        mapInstance.on('mousemove', handleMouseMove);
+        mapInstance.on('mouseup', handleMouseUp);
+        return ()=>{
+            mapInstance.off('mousedown', handleMouseDown);
+            mapInstance.off('mousemove', handleMouseMove);
+            mapInstance.off('mouseup', handleMouseUp);
+            if (rectangleLayerRef.current) mapInstance.removeLayer(rectangleLayerRef.current);
+        };
+    }, [
+        mapInstance,
+        selectedTerritory,
+        onShopsSelected
+    ]);
+    const findShopsInRectangle = (bounds)=>{
+        if (!bounds) return [];
+        try {
+            // Get shop IDs that are within the rectangle bounds
+            const shopIds = [];
+            console.log('Checking markers:', Object.keys(markersRef || {}));
+            console.log('MarkersRef type:', typeof markersRef, markersRef);
+            console.log('Rectangle bounds:', bounds);
+            if (markersRef && typeof markersRef === 'object') Object.entries(markersRef).forEach(([shopId, marker])=>{
+                if (marker && marker.getLatLng) {
+                    const latlng = marker.getLatLng();
+                    if (bounds.contains(latlng)) {
+                        shopIds.push(shopId);
+                        console.log('Shop found in rectangle:', shopId, latlng);
+                    }
+                }
+            });
+            else console.warn('MarkersRef is not available:', markersRef);
+            console.log('Total shops found:', shopIds.length);
+            return shopIds;
+        } catch (error) {
+            console.warn('Shop detection failed:', error);
+            return [];
+        }
+    };
+    const isPointInPolygon = (point, polygon)=>{
+        let inside = false;
+        const x = point.lat;
+        const y = point.lng;
+        for(let i = 0, j = polygon.length - 1; i < polygon.length; j = i++){
+            const xi = polygon[i].lat;
+            const yi = polygon[i].lng;
+            const xj = polygon[j].lat;
+            const yj = polygon[j].lng;
+            if (yi > y !== yj > y && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
+        }
+        return inside;
+    };
+    // Always show the lasso selector when active, even without a selected territory
+    return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
+        className: `rectangle-selector ${isDrawing ? 'drawing' : ''}`,
+        children: [
+            isDrawing && /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
+                className: "rectangle-instructions",
+                children: [
+                    "Drawing rectangle... Release to assign shops to ",
+                    targetTerritory.name
+                ]
+            }, void 0, true, {
+                fileName: "src/components/LassoSelector.js",
+                lineNumber: 196,
+                columnNumber: 9
+            }, undefined),
+            selectedShops.length > 0 && /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
+                className: "selection-feedback",
+                children: [
+                    "Selected ",
+                    selectedShops.length,
+                    " shops for ",
+                    targetTerritory.name
+                ]
+            }, void 0, true, {
+                fileName: "src/components/LassoSelector.js",
+                lineNumber: 201,
+                columnNumber: 9
+            }, undefined)
+        ]
+    }, void 0, true, {
+        fileName: "src/components/LassoSelector.js",
+        lineNumber: 194,
+        columnNumber: 5
+    }, undefined);
+};
+_s(RectangleSelector, "QwUkC6MJU5SwTZmtrDiipFMkJGE=");
+_c = RectangleSelector;
+exports.default = RectangleSelector;
+var _c;
+$RefreshReg$(_c, "RectangleSelector");
+
+  $parcel$ReactRefreshHelpers$4dd3.postlude(module);
+} finally {
+  globalThis.$RefreshReg$ = prevRefreshReg;
+  globalThis.$RefreshSig$ = prevRefreshSig;
+}
+},{"react/jsx-dev-runtime":"dVPUn","react":"jMk1U","leaflet":"gzvEd","./LassoSelector.css":"81TUe","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"7h6Pi"}],"81TUe":[function() {},{}],"5cE8b":[function(require,module,exports,__globalThis) {
 var $parcel$ReactRefreshHelpers$b7a5 = require("@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js");
 $parcel$ReactRefreshHelpers$b7a5.init();
 var prevRefreshReg = globalThis.$RefreshReg$;
@@ -38605,7 +38958,7 @@ var _react = require("react");
 var _reactDefault = parcelHelpers.interopDefault(_react);
 var _sampleData = require("../utils/sampleData");
 var _rightSidebarCss = require("./RightSidebar.css");
-const RightSidebar = ({ selectedTerritory, territories, collapsed, onToggle })=>{
+const RightSidebar = ({ selectedTerritory, territories, collapsed, onToggle, isLassoActive, onLassoToggle })=>{
     const suggestions = selectedTerritory ? (0, _sampleData.generateOptimizationSuggestions)(selectedTerritory) : [];
     return /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("aside", {
         className: `sidebar-right ${collapsed ? 'collapsed' : ''}`,
@@ -38797,19 +39150,12 @@ const RightSidebar = ({ selectedTerritory, territories, collapsed, onToggle })=>
                                     columnNumber: 17
                                 }, undefined),
                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("button", {
-                                    className: "btn btn-secondary",
-                                    children: "Split Territory"
+                                    className: `btn ${isLassoActive ? 'btn-primary' : 'btn-secondary'}`,
+                                    onClick: onLassoToggle,
+                                    children: isLassoActive ? "\uD83C\uDFAF Rectangle Tool (Active)" : "\uD83C\uDFAF Rectangle Tool"
                                 }, void 0, false, {
                                     fileName: "src/components/RightSidebar.js",
                                     lineNumber: 52,
-                                    columnNumber: 17
-                                }, undefined),
-                                /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("button", {
-                                    className: "btn btn-secondary",
-                                    children: "Merge Territories"
-                                }, void 0, false, {
-                                    fileName: "src/components/RightSidebar.js",
-                                    lineNumber: 53,
                                     columnNumber: 17
                                 }, undefined)
                             ]
@@ -38826,20 +39172,20 @@ const RightSidebar = ({ selectedTerritory, territories, collapsed, onToggle })=>
                             children: "Select a Territory"
                         }, void 0, false, {
                             fileName: "src/components/RightSidebar.js",
-                            lineNumber: 58,
+                            lineNumber: 62,
                             columnNumber: 15
                         }, undefined),
                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("p", {
                             children: "Click on a territory in the left sidebar to view its details and optimization suggestions."
                         }, void 0, false, {
                             fileName: "src/components/RightSidebar.js",
-                            lineNumber: 59,
+                            lineNumber: 63,
                             columnNumber: 15
                         }, undefined)
                     ]
                 }, void 0, true, {
                     fileName: "src/components/RightSidebar.js",
-                    lineNumber: 57,
+                    lineNumber: 61,
                     columnNumber: 13
                 }, undefined)
             ]
@@ -38854,7 +39200,7 @@ const RightSidebar = ({ selectedTerritory, territories, collapsed, onToggle })=>
                             children: selectedTerritory.name
                         }, void 0, false, {
                             fileName: "src/components/RightSidebar.js",
-                            lineNumber: 67,
+                            lineNumber: 71,
                             columnNumber: 15
                         }, undefined),
                         /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -38867,7 +39213,7 @@ const RightSidebar = ({ selectedTerritory, territories, collapsed, onToggle })=>
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/components/RightSidebar.js",
-                                    lineNumber: 69,
+                                    lineNumber: 73,
                                     columnNumber: 17
                                 }, undefined),
                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -38877,7 +39223,7 @@ const RightSidebar = ({ selectedTerritory, territories, collapsed, onToggle })=>
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/components/RightSidebar.js",
-                                    lineNumber: 70,
+                                    lineNumber: 74,
                                     columnNumber: 17
                                 }, undefined),
                                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
@@ -38888,19 +39234,19 @@ const RightSidebar = ({ selectedTerritory, territories, collapsed, onToggle })=>
                                     ]
                                 }, void 0, true, {
                                     fileName: "src/components/RightSidebar.js",
-                                    lineNumber: 71,
+                                    lineNumber: 75,
                                     columnNumber: 17
                                 }, undefined)
                             ]
                         }, void 0, true, {
                             fileName: "src/components/RightSidebar.js",
-                            lineNumber: 68,
+                            lineNumber: 72,
                             columnNumber: 15
                         }, undefined)
                     ]
                 }, void 0, true, {
                     fileName: "src/components/RightSidebar.js",
-                    lineNumber: 66,
+                    lineNumber: 70,
                     columnNumber: 13
                 }, undefined) : /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("div", {
                     className: "no-selection-collapsed",
@@ -38908,12 +39254,12 @@ const RightSidebar = ({ selectedTerritory, territories, collapsed, onToggle })=>
                         children: "Select Territory"
                     }, void 0, false, {
                         fileName: "src/components/RightSidebar.js",
-                        lineNumber: 76,
+                        lineNumber: 80,
                         columnNumber: 15
                     }, undefined)
                 }, void 0, false, {
                     fileName: "src/components/RightSidebar.js",
-                    lineNumber: 75,
+                    lineNumber: 79,
                     columnNumber: 13
                 }, undefined),
                 /*#__PURE__*/ (0, _jsxDevRuntime.jsxDEV)("button", {
@@ -38923,13 +39269,13 @@ const RightSidebar = ({ selectedTerritory, territories, collapsed, onToggle })=>
                     children: "\u2190"
                 }, void 0, false, {
                     fileName: "src/components/RightSidebar.js",
-                    lineNumber: 79,
+                    lineNumber: 83,
                     columnNumber: 11
                 }, undefined)
             ]
         }, void 0, true, {
             fileName: "src/components/RightSidebar.js",
-            lineNumber: 64,
+            lineNumber: 68,
             columnNumber: 9
         }, undefined)
     }, void 0, false, {
@@ -70997,6 +71343,6 @@ const version = XLSX.version;
 },{"f481c164bc92069e":"eoH60","@parcel/transformer-js/src/esmodule-helpers.js":"jnFvT"}],"eoH60":[function(require,module,exports,__globalThis) {
 "use strict";
 
-},{}],"b5HKi":[function() {},{}],"goyoj":[function() {},{}],"clPKd":[function() {},{}]},["jQxEw","a0t4e"], "a0t4e", "parcelRequire1e2c", {}, null, null, "http://localhost:58747")
+},{}],"b5HKi":[function() {},{}],"goyoj":[function() {},{}],"clPKd":[function() {},{}]},["2u1gL","a0t4e"], "a0t4e", "parcelRequire1e2c", {}, null, null, "http://localhost:51570")
 
 //# sourceMappingURL=dbo.31b563d9.js.map
