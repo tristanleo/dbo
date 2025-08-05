@@ -1,29 +1,9 @@
-// Generate sample shop locations around New York area
-const generateShops = (count = 30) => {
-  const shops = [];
-  const centerLat = 40.7128;
-  const centerLng = -74.0060;
-  const radius = 0.1; // Roughly 10km radius
+// Import Indonesian store data
+import { generateIndonesianStores } from './indonesianData.js';
 
-  for (let i = 1; i <= count; i++) {
-    const angle = (i / count) * 2 * Math.PI;
-    const distance = Math.random() * radius;
-    
-    const lat = centerLat + distance * Math.cos(angle);
-    const lng = centerLng + distance * Math.sin(angle);
-    
-    shops.push({
-      id: `shop_${i}`,
-      name: `Hardware Store ${i}`,
-      coordinates: [lat, lng],
-      priority: Math.random() > 0.7 ? 'high' : 'normal',
-      status: Math.random() > 0.8 ? 'visited' : 'pending',
-      address: `${Math.floor(Math.random() * 9999)} Main St, NY`,
-      phone: `+1-555-${String(Math.floor(Math.random() * 9999)).padStart(4, '0')}`
-    });
-  }
-  
-  return shops;
+// Generate Indonesian shop locations around West Java area
+const generateShops = (count = 30) => {
+  return generateIndonesianStores(count);
 };
 
 // Generate territories using simple clustering
@@ -33,8 +13,8 @@ const generateTerritories = (shops, salesmenCount) => {
   const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'];
   
   const salesmenNames = [
-    'John Doe', 'Jane Smith', 'Mike Johnson', 
-    'Sarah Wilson', 'David Brown', 'Lisa Davis'
+    'Budi Santoso', 'Siti Rahmawati', 'Ahmad Hidayat', 
+    'Dewi Sartika', 'Rudi Hermawan', 'Nina Kartika'
   ];
 
   for (let i = 0; i < salesmenCount; i++) {
@@ -67,7 +47,7 @@ const generateTerritories = (shops, salesmenCount) => {
 };
 
 export const generateSampleData = (salesmenCount) => {
-  const shopsData = generateShops(30);
+  const shopsData = generateShops(100);
   const territoriesData = generateTerritories(shopsData, salesmenCount);
   
   return {
@@ -76,22 +56,18 @@ export const generateSampleData = (salesmenCount) => {
   };
 };
 
-// Optimized clustering algorithm using K-means
+// Improved clustering algorithm for non-overlapping territories
 export const generateOptimizedClusters = (shops, salesmenCount) => {
   if (shops.length === 0 || salesmenCount <= 0) {
     return { territoriesData: [] };
   }
 
-  // Initialize centroids randomly
-  const centroids = [];
-  for (let i = 0; i < salesmenCount; i++) {
-    const randomShop = shops[Math.floor(Math.random() * shops.length)];
-    centroids.push([randomShop.coordinates[0], randomShop.coordinates[1]]);
-  }
+  // Initialize centroids strategically based on geographic distribution
+  const centroids = initializeStrategicCentroids(shops, salesmenCount);
 
-  // K-means clustering
+  // K-means clustering with improved convergence
   let iterations = 0;
-  const maxIterations = 100;
+  const maxIterations = 150;
   let hasChanged = true;
   let finalClusters = [];
 
@@ -99,7 +75,7 @@ export const generateOptimizedClusters = (shops, salesmenCount) => {
     hasChanged = false;
     iterations++;
 
-    // Assign shops to nearest centroid
+    // Assign shops to nearest centroid with distance penalty for overlap
     const clusters = Array.from({ length: salesmenCount }, () => []);
     
     shops.forEach(shop => {
@@ -113,8 +89,14 @@ export const generateOptimizedClusters = (shops, salesmenCount) => {
           centroid[0], 
           centroid[1]
         );
-        if (distance < minDistance) {
-          minDistance = distance;
+        
+        // Add penalty for clusters that are too large
+        const clusterSize = clusters[index].length;
+        const sizePenalty = clusterSize > Math.ceil(shops.length / salesmenCount) * 1.5 ? 50 : 0;
+        
+        const totalCost = distance + sizePenalty;
+        if (totalCost < minDistance) {
+          minDistance = totalCost;
           nearestCentroid = index;
         }
       });
@@ -122,7 +104,7 @@ export const generateOptimizedClusters = (shops, salesmenCount) => {
       clusters[nearestCentroid].push(shop);
     });
 
-    // Update centroids
+    // Update centroids with better convergence
     const newCentroids = centroids.map((centroid, index) => {
       if (clusters[index].length === 0) return centroid;
       
@@ -130,7 +112,7 @@ export const generateOptimizedClusters = (shops, salesmenCount) => {
       const avgLng = clusters[index].reduce((sum, shop) => sum + shop.coordinates[1], 0) / clusters[index].length;
       
       const newCentroid = [avgLat, avgLng];
-      const hasMoved = Math.abs(newCentroid[0] - centroid[0]) > 0.001 || Math.abs(newCentroid[1] - centroid[1]) > 0.001;
+      const hasMoved = Math.abs(newCentroid[0] - centroid[0]) > 0.0005 || Math.abs(newCentroid[1] - centroid[1]) > 0.0005;
       
       if (hasMoved) hasChanged = true;
       return newCentroid;
@@ -144,11 +126,14 @@ export const generateOptimizedClusters = (shops, salesmenCount) => {
     finalClusters = clusters;
   }
 
+  // Post-process clusters to ensure better separation
+  finalClusters = postProcessClusters(finalClusters, shops, salesmenCount);
+
   // Create territories from clusters
   const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'];
   const salesmenNames = [
-    'John Doe', 'Jane Smith', 'Mike Johnson', 
-    'Sarah Wilson', 'David Brown', 'Lisa Davis'
+    'Budi Santoso', 'Siti Rahmawati', 'Ahmad Hidayat', 
+    'Dewi Sartika', 'Rudi Hermawan', 'Nina Kartika'
   ];
 
   const territoriesData = finalClusters.map((cluster, index) => {
@@ -175,6 +160,134 @@ export const generateOptimizedClusters = (shops, salesmenCount) => {
   }).filter(territory => territory !== null);
 
   return { territoriesData };
+};
+
+// Initialize centroids strategically based on geographic distribution with randomization
+const initializeStrategicCentroids = (shops, salesmenCount) => {
+  // Find the geographic bounds of all shops
+  const lats = shops.map(shop => shop.coordinates[0]);
+  const lngs = shops.map(shop => shop.coordinates[1]);
+  
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+  
+  const centroids = [];
+  
+  // Add randomization factor to create different clusters each time
+  const randomFactor = Math.random() * 0.3 - 0.15; // ±0.15 variation
+  
+  if (salesmenCount === 1) {
+    // Single salesman - use center of all shops
+    const centerLat = (minLat + maxLat) / 2;
+    const centerLng = (minLng + maxLng) / 2;
+    centroids.push([centerLat, centerLng]);
+  } else if (salesmenCount === 2) {
+    // Two salesmen - split east-west with randomization
+    const centerLat = (minLat + maxLat) / 2;
+    const splitPoint = 0.5 + randomFactor;
+    centroids.push([centerLat, minLng + (maxLng - minLng) * (0.25 + randomFactor)]); // West
+    centroids.push([centerLat, minLng + (maxLng - minLng) * (0.75 + randomFactor)]); // East
+  } else if (salesmenCount === 3) {
+    // Three salesmen - triangular distribution with randomization
+    const centerLat = (minLat + maxLat) / 2;
+    const centerLng = (minLng + maxLng) / 2;
+    
+    // Create different triangular patterns based on random factor
+    const pattern = Math.floor(Math.random() * 4);
+    
+    if (pattern === 0) {
+      // Northwest, Southeast, Center
+      centroids.push([minLat + (maxLat - minLat) * (0.25 + randomFactor), minLng + (maxLng - minLng) * (0.25 + randomFactor)]);
+      centroids.push([minLat + (maxLat - minLat) * (0.75 + randomFactor), minLng + (maxLng - minLng) * (0.75 + randomFactor)]);
+      centroids.push([centerLat, centerLng]);
+    } else if (pattern === 1) {
+      // Northeast, Southwest, Center
+      centroids.push([minLat + (maxLat - minLat) * (0.75 + randomFactor), minLng + (maxLng - minLng) * (0.25 + randomFactor)]);
+      centroids.push([minLat + (maxLat - minLat) * (0.25 + randomFactor), minLng + (maxLng - minLng) * (0.75 + randomFactor)]);
+      centroids.push([centerLat, centerLng]);
+    } else if (pattern === 2) {
+      // North, South, Center
+      centroids.push([minLat + (maxLat - minLat) * (0.25 + randomFactor), centerLng]);
+      centroids.push([minLat + (maxLat - minLat) * (0.75 + randomFactor), centerLng]);
+      centroids.push([centerLat, centerLng]);
+    } else {
+      // East, West, Center
+      centroids.push([centerLat, minLng + (maxLng - minLng) * (0.25 + randomFactor)]);
+      centroids.push([centerLat, minLng + (maxLng - minLng) * (0.75 + randomFactor)]);
+      centroids.push([centerLat, centerLng]);
+    }
+  } else {
+    // Four or more salesmen - grid-like distribution with randomization
+    const rows = Math.ceil(Math.sqrt(salesmenCount));
+    const cols = Math.ceil(salesmenCount / rows);
+    
+    for (let i = 0; i < salesmenCount; i++) {
+      const row = Math.floor(i / cols);
+      const col = i % cols;
+      
+      const lat = minLat + (maxLat - minLat) * (row + 0.5 + randomFactor) / rows;
+      const lng = minLng + (maxLng - minLng) * (col + 0.5 + randomFactor) / cols;
+      
+      centroids.push([lat, lng]);
+    }
+  }
+  
+  return centroids;
+};
+
+// Post-process clusters to ensure better separation
+const postProcessClusters = (clusters, shops, salesmenCount) => {
+  const targetSize = Math.ceil(shops.length / salesmenCount);
+  const processedClusters = [...clusters];
+  
+  // Balance cluster sizes
+  for (let i = 0; i < processedClusters.length; i++) {
+    if (processedClusters[i].length === 0) {
+      // Find the largest cluster and take one shop
+      let largestClusterIndex = 0;
+      let maxSize = 0;
+      
+      for (let j = 0; j < processedClusters.length; j++) {
+        if (processedClusters[j].length > maxSize) {
+          maxSize = processedClusters[j].length;
+          largestClusterIndex = j;
+        }
+      }
+      
+      if (maxSize > 1) {
+        const shopToMove = processedClusters[largestClusterIndex].pop();
+        processedClusters[i].push(shopToMove);
+      }
+    }
+  }
+  
+  // Ensure no cluster is too large
+  for (let i = 0; i < processedClusters.length; i++) {
+    if (processedClusters[i].length > targetSize * 1.5) {
+      const excess = processedClusters[i].length - targetSize;
+      
+      // Find smallest cluster
+      let smallestClusterIndex = 0;
+      let minSize = Infinity;
+      
+      for (let j = 0; j < processedClusters.length; j++) {
+        if (j !== i && processedClusters[j].length < minSize) {
+          minSize = processedClusters[j].length;
+          smallestClusterIndex = j;
+        }
+      }
+      
+      // Move excess shops to smallest cluster
+      for (let k = 0; k < excess && k < processedClusters[i].length; k++) {
+        const shopToMove = processedClusters[i].pop();
+        processedClusters[smallestClusterIndex].push(shopToMove);
+      }
+    }
+  }
+  
+  return processedClusters;
 };
 
 // Calculate distance between two points using Haversine formula

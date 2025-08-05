@@ -41,6 +41,13 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
+    // Add visual feedback for territory changes
+    const mapContainer = mapRef.current;
+    if (mapContainer) {
+      mapContainer.style.transition = 'opacity 0.3s ease';
+      mapContainer.style.opacity = '0.7';
+    }
+
     // Clear existing markers and territory layers
     Object.values(markersRef.current).forEach(marker => {
       mapInstanceRef.current.removeLayer(marker);
@@ -57,6 +64,14 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
       }
     });
     territoryLayersRef.current = {};
+
+    // Restore opacity after a short delay
+    setTimeout(() => {
+      if (mapContainer) {
+        mapContainer.style.opacity = '1';
+        mapContainer.style.transition = '';
+      }
+    }, 300);
 
     // Add territory overlays
     territories.forEach(territory => {

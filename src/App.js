@@ -12,8 +12,8 @@ function App() {
   const [shops, setShops] = useState([]);
   const [selectedTerritory, setSelectedTerritory] = useState(null);
   const [mapData, setMapData] = useState({
-    center: [40.7128, -74.0060], // New York coordinates
-    zoom: 10
+    center: [-6.9175, 107.6191], // Bandung, West Java coordinates
+    zoom: 8
   });
   
   // Sidebar collapse states
@@ -58,9 +58,25 @@ function App() {
   };
 
   const handleGenerateClusters = () => {
-    const { territoriesData } = generateOptimizedClusters(shops, salesmenCount);
-    setTerritories(territoriesData);
-    setSelectedTerritory(territoriesData[0]);
+    // Add visual feedback
+    const button = document.querySelector('.generate-clusters-btn');
+    if (button) {
+      button.textContent = '🔄 Generating...';
+      button.disabled = true;
+    }
+    
+    // Small delay to show the loading state
+    setTimeout(() => {
+      const { territoriesData } = generateOptimizedClusters(shops, salesmenCount);
+      setTerritories(territoriesData);
+      setSelectedTerritory(territoriesData[0]);
+      
+      // Reset button
+      if (button) {
+        button.textContent = '🎯 Generate Clusters';
+        button.disabled = false;
+      }
+    }, 500);
   };
 
   const handleShopsSelected = (selectedShopIds, territoryId) => {

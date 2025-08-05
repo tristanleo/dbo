@@ -10,13 +10,18 @@
   "dependencies": {
     "leaflet": "^1.9.4",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@parcel/transformer-sass": "^2.9.3",
     "parcel": "^2.9.3"
   },
-  "keywords": ["route-optimization", "mapping", "logistics"],
+  "keywords": [
+    "route-optimization",
+    "mapping",
+    "logistics"
+  ],
   "author": "Your Name",
   "license": "MIT"
-} 
+}
