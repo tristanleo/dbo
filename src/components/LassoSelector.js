@@ -2,158 +2,223 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import './LassoSelector.css';
 
-const RectangleSelector = ({ mapInstance, onShopsSelected, selectedTerritory, markersRef }) => {
+const LassoSelector = ({ mapInstance, onShopsSelected, selectedTerritory, markersRef }) => {
   const [isDrawing, setIsDrawing] = useState(false);
-  const [startPoint, setStartPoint] = useState(null);
-  const [rectangleLayer, setRectangleLayer] = useState(null);
+  const [drawingPath, setDrawingPath] = useState([]);
+  const [lassoLayer, setLassoLayer] = useState(null);
   const [selectedShops, setSelectedShops] = useState([]);
   const isDrawingRef = useRef(false);
-  const rectangleLayerRef = useRef(null);
+  const lassoLayerRef = useRef(null);
+  const pathPointsRef = useRef([]);
   
   // Get the target territory (selected or first available)
   const targetTerritory = selectedTerritory || { name: 'Budi Santoso', color: '#FF6B6B' };
 
+  // Debug logging when component mounts/updates
+  useEffect(() => {
+    console.log('LassoSelector: Component mounted/updated', {
+      mapInstance: !!mapInstance,
+      selectedTerritory: selectedTerritory?.name,
+      markersRef: !!markersRef
+    });
+  }, [mapInstance, selectedTerritory, markersRef]);
+
   useEffect(() => {
     if (!mapInstance) return;
 
+    console.log('LassoSelector: Setting up event listeners on map instance');
+
     const handleMouseDown = (e) => {
-      // Allow drawing even without a selected territory when rectangle tool is active
-      // The territory will be created based on the selected shops
-      
-      console.log('Rectangle mouse down:', e.latlng);
-      
-      try {
-        isDrawingRef.current = true;
-        setIsDrawing(true);
-        setStartPoint(e.latlng);
-        setSelectedShops([]);
+      // Only handle events when lasso is actually active
+      if (!isDrawingRef.current) {
+        console.log('Lasso mouse down:', e.latlng);
+        console.log('Event type:', e.type);
+        console.log('Event target:', e.target);
         
-        // Create rectangle layer with more visible styling
-        const bounds = L.latLngBounds(e.latlng, e.latlng);
-        const newRectangleLayer = L.rectangle(bounds, {
-          color: '#e74c3c',
-          weight: 4,
-          opacity: 1,
-          fillColor: '#e74c3c',
-          fillOpacity: 0.3,
-          dashArray: '15, 8'
-        });
-        
-        // Explicitly add to map
-        newRectangleLayer.addTo(mapInstance);
-        setRectangleLayer(newRectangleLayer);
-        rectangleLayerRef.current = newRectangleLayer;
-        console.log('Rectangle layer created and added to map', {
-          layer: newRectangleLayer,
-          bounds: newRectangleLayer.getBounds(),
-          mapLayers: mapInstance.getLayers().length
-        });
-        
-        // Also create a simple polyline as backup for visibility
-        const backupLine = L.polyline([e.latlng, e.latlng], {
-          color: '#ff0000',
-          weight: 6,
-          opacity: 1
-        }).addTo(mapInstance);
-        console.log('Backup line created for visibility');
-      } catch (error) {
-        console.warn('Rectangle drawing failed:', error);
-        isDrawingRef.current = false;
-        setIsDrawing(false);
+        try {
+          isDrawingRef.current = true;
+          setIsDrawing(true);
+          setDrawingPath([]);
+          setSelectedShops([]);
+          
+          // Start new path
+          pathPointsRef.current = [e.latlng];
+          setDrawingPath([e.latlng]);
+          
+          // Create lasso polyline layer with visible styling
+          const newLassoLayer = L.polyline([e.latlng], {
+            color: '#ff0000',
+            weight: 8,
+            opacity: 1,
+            fillColor: '#ff0000',
+            fillOpacity: 0.2,
+            dashArray: '8, 4'
+          });
+          
+          // Add CSS class for enhanced visibility
+          try {
+            const element = newLassoLayer.getElement();
+            if (element) {
+              element.classList.add('lasso-drawing');
+            }
+          } catch (cssError) {
+            console.warn('Could not add CSS class:', cssError);
+          }
+          
+          // Add to map
+          newLassoLayer.addTo(mapInstance);
+          setLassoLayer(newLassoLayer);
+          lassoLayerRef.current = newLassoLayer;
+          
+          console.log('Lasso layer created and added to map');
+        } catch (error) {
+          console.warn('Lasso drawing failed:', error);
+          isDrawingRef.current = false;
+          setIsDrawing(false);
+        }
+      } else {
+        console.log('Lasso already drawing, ignoring mouse down');
       }
     };
 
     const handleMouseMove = (e) => {
-      if (!isDrawingRef.current || !startPoint) return;
+      if (!isDrawingRef.current || pathPointsRef.current.length === 0) return;
       
       try {
-        if (rectangleLayerRef.current) {
-          // Update rectangle bounds
-          const bounds = L.latLngBounds(startPoint, e.latlng);
-          rectangleLayerRef.current.setBounds(bounds);
-          console.log('Rectangle bounds updated:', bounds, 'start:', startPoint, 'current:', e.latlng);
-        } else {
-          console.warn('Rectangle layer is null during mouse move');
+        if (lassoLayerRef.current) {
+          // Add new point to path
+          const newPoint = e.latlng;
+          pathPointsRef.current.push(newPoint);
+          
+          // Update polyline with new point
+          lassoLayerRef.current.setLatLngs(pathPointsRef.current);
+          
+          console.log('Lasso path updated:', pathPointsRef.current.length, 'points');
         }
       } catch (error) {
-        console.warn('Rectangle movement failed:', error);
+        console.warn('Lasso movement failed:', error);
       }
     };
 
     const handleMouseUp = () => {
-      if (!isDrawingRef.current || !startPoint) return;
+      if (!isDrawingRef.current || pathPointsRef.current.length < 3) return;
       
       try {
         isDrawingRef.current = false;
         setIsDrawing(false);
         
-        // Get the final bounds of the rectangle
-        const finalBounds = rectangleLayerRef.current ? rectangleLayerRef.current.getBounds() : null;
+        // Close the path by connecting back to start
+        const closedPath = [...pathPointsRef.current, pathPointsRef.current[0]];
         
-        if (finalBounds) {
-          // Find shops within the rectangle area
-          const shopsInRectangle = findShopsInRectangle(finalBounds);
-          setSelectedShops(shopsInRectangle);
+        // Update the polyline to show closed path
+        if (lassoLayerRef.current) {
+          lassoLayerRef.current.setLatLngs(closedPath);
           
-          console.log('Rectangle completed:', {
-            bounds: finalBounds,
-            shopsFound: shopsInRectangle.length,
-            shops: shopsInRectangle
+          // Convert to polygon for better visual representation
+          const polygonLayer = L.polygon(closedPath, {
+            color: '#e74c3c',
+            weight: 6,
+            opacity: 1,
+            fillColor: '#e74c3c',
+            fillOpacity: 0.3,
+            dashArray: '8, 4'
           });
           
-          if (shopsInRectangle.length > 0) {
-            // Use the first available territory if none is selected
-            const territoryId = selectedTerritory ? selectedTerritory.id : 'territory_1';
-            onShopsSelected(shopsInRectangle, territoryId);
+          // Add CSS class for enhanced visibility
+          try {
+            const element = polygonLayer.getElement();
+            if (element) {
+              element.classList.add('lasso-complete');
+            }
+          } catch (cssError) {
+            console.warn('Could not add CSS class to polygon:', cssError);
           }
+          
+          // Replace polyline with polygon
+          mapInstance.removeLayer(lassoLayerRef.current);
+          polygonLayer.addTo(mapInstance);
+          lassoLayerRef.current = polygonLayer;
         }
         
-        // Remove rectangle layer
-        if (rectangleLayerRef.current) {
-          mapInstance.removeLayer(rectangleLayerRef.current);
-          setRectangleLayer(null);
-          rectangleLayerRef.current = null;
+        // Find shops within the lasso area
+        const shopsInLasso = findShopsInLasso(closedPath);
+        setSelectedShops(shopsInLasso);
+        
+        console.log('Lasso completed:', {
+          points: closedPath.length,
+          shopsFound: shopsInLasso.length,
+          shops: shopsInLasso,
+          selectedTerritory: selectedTerritory?.name || 'None'
+        });
+        
+        if (shopsInLasso.length > 0) {
+          // Ensure we have a valid territory ID
+          let territoryId;
+          if (selectedTerritory) {
+            territoryId = selectedTerritory.id;
+          } else {
+            // If no territory is selected, use the first available one
+            // This should match the territory IDs from the sample data
+            territoryId = 'territory_1';
+            console.log('LassoSelector: No territory selected, using fallback ID:', territoryId);
+          }
+          
+          console.log('LassoSelector: Assigning shops to territory:', territoryId);
+          console.log('LassoSelector: Calling onShopsSelected with:', { shopsInLasso, territoryId });
+          onShopsSelected(shopsInLasso, territoryId);
+        } else {
+          console.log('LassoSelector: No shops found in lasso area');
         }
-        setStartPoint(null);
+        
+        // Keep the lasso visible for a few seconds then remove
+        setTimeout(() => {
+          if (lassoLayerRef.current) {
+            mapInstance.removeLayer(lassoLayerRef.current);
+            setLassoLayer(null);
+            lassoLayerRef.current = null;
+          }
+          setDrawingPath([]);
+          pathPointsRef.current = [];
+        }, 3000);
+        
       } catch (error) {
-        console.warn('Rectangle completion failed:', error);
+        console.warn('Lasso completion failed:', error);
         isDrawingRef.current = false;
         setIsDrawing(false);
       }
     };
 
-    mapInstance.on('mousedown', handleMouseDown);
-    mapInstance.on('mousemove', handleMouseMove);
-    mapInstance.on('mouseup', handleMouseUp);
+    // Use capture: false to prevent interfering with other map events
+    mapInstance.on('mousedown', handleMouseDown, { capture: false });
+    mapInstance.on('mousemove', handleMouseMove, { capture: false });
+    mapInstance.on('mouseup', handleMouseUp, { capture: false });
 
     return () => {
       mapInstance.off('mousedown', handleMouseDown);
       mapInstance.off('mousemove', handleMouseMove);
       mapInstance.off('mouseup', handleMouseUp);
-      if (rectangleLayerRef.current) {
-        mapInstance.removeLayer(rectangleLayerRef.current);
+      if (lassoLayerRef.current) {
+        mapInstance.removeLayer(lassoLayerRef.current);
       }
     };
   }, [mapInstance, selectedTerritory, onShopsSelected]);
 
-  const findShopsInRectangle = (bounds) => {
-    if (!bounds) return [];
+  const findShopsInLasso = (lassoPath) => {
+    if (!lassoPath || lassoPath.length < 3) return [];
     
     try {
-      // Get shop IDs that are within the rectangle bounds
       const shopIds = [];
       
-      console.log('Checking markers:', Object.keys(markersRef || {}));
-      console.log('MarkersRef type:', typeof markersRef, markersRef);
-      console.log('Rectangle bounds:', bounds);
+      console.log('Checking markers in lasso:', Object.keys(markersRef || {}));
+      console.log('Lasso path points:', lassoPath.length);
       
       if (markersRef && typeof markersRef === 'object') {
         Object.entries(markersRef).forEach(([shopId, marker]) => {
           if (marker && marker.getLatLng) {
             const latlng = marker.getLatLng();
-            if (bounds.contains(latlng)) {
+            if (isPointInPolygon(latlng, lassoPath)) {
               shopIds.push(shopId);
-              console.log('Shop found in rectangle:', shopId, latlng);
+              console.log('Shop found in lasso:', shopId, latlng);
             }
           }
         });
@@ -161,10 +226,10 @@ const RectangleSelector = ({ mapInstance, onShopsSelected, selectedTerritory, ma
         console.warn('MarkersRef is not available:', markersRef);
       }
       
-      console.log('Total shops found:', shopIds.length);
+      console.log('Total shops found in lasso:', shopIds.length);
       return shopIds;
     } catch (error) {
-      console.warn('Shop detection failed:', error);
+      console.warn('Shop detection in lasso failed:', error);
       return [];
     }
   };
@@ -188,13 +253,21 @@ const RectangleSelector = ({ mapInstance, onShopsSelected, selectedTerritory, ma
     return inside;
   };
 
-  // Always show the lasso selector when active, even without a selected territory
-
   return (
-    <div className={`rectangle-selector ${isDrawing ? 'drawing' : ''}`}>
+    <div className={`lasso-selector ${isDrawing ? 'drawing' : ''}`}>
+      {/* Always show lasso tool status when active */}
+      <div className="lasso-status">
+        🎯 Lasso Tool Active - Click and drag to draw selection area
+      </div>
+      
+      {/* Show status about territory clearing */}
+      <div className="lasso-info">
+        Territories cleared - ready for manual assignment
+      </div>
+      
       {isDrawing && (
-        <div className="rectangle-instructions">
-          Drawing rectangle... Release to assign shops to {targetTerritory.name}
+        <div className="lasso-instructions">
+          Drawing lasso... Release to assign shops to {targetTerritory.name}
         </div>
       )}
       {selectedShops.length > 0 && (
@@ -206,4 +279,4 @@ const RectangleSelector = ({ mapInstance, onShopsSelected, selectedTerritory, ma
   );
 };
 
-export default RectangleSelector; 
+export default LassoSelector; 

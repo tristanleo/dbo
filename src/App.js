@@ -83,18 +83,24 @@ function App() {
   };
 
   const handleShopsSelected = (selectedShopIds, territoryId) => {
+    console.log('App: handleShopsSelected called with:', { selectedShopIds, territoryId });
+    console.log('App: Current territories:', territories);
+    console.log('App: Current shops:', shops);
+    
     // Find the territory to assign shops to
     const targetTerritory = territories.find(t => t.id === territoryId);
+    console.log('App: Target territory found:', targetTerritory);
     
     if (targetTerritory) {
       // Move selected shops to the specified territory
       const selectedShops = shops.filter(shop => selectedShopIds.includes(shop.id));
+      console.log('App: Selected shops:', selectedShops);
       
       const updatedTerritories = territories.map(territory => {
         if (territory.id === territoryId) {
           // Add selected shops to this territory
           const updatedShops = [...territory.shops, ...selectedShops];
-          return {
+          const updatedTerritory = {
             ...territory,
             shops: updatedShops,
             center: calculateCenter(updatedShops.map(shop => shop.coordinates)),
@@ -102,6 +108,8 @@ function App() {
             estimatedTime: Math.round(calculateTotalDistance(updatedShops) / 15 * 10) / 10,
             shopCount: updatedShops.length
           };
+          console.log('App: Updated territory:', updatedTerritory);
+          return updatedTerritory;
         } else {
           // Remove selected shops from other territories
           const filteredShops = territory.shops.filter(shop => !selectedShopIds.includes(shop.id));
@@ -115,8 +123,15 @@ function App() {
           };
         }
       });
+      
+      console.log('App: Final updated territories:', updatedTerritories);
       setTerritories(updatedTerritories);
-      setSelectedTerritory(updatedTerritories.find(t => t.id === territoryId));
+      
+      const newSelectedTerritory = updatedTerritories.find(t => t.id === territoryId);
+      console.log('App: New selected territory:', newSelectedTerritory);
+      setSelectedTerritory(newSelectedTerritory);
+    } else {
+      console.warn('App: Target territory not found for ID:', territoryId);
     }
   };
 
@@ -158,7 +173,11 @@ function App() {
 
   const toggleLasso = () => {
     if (!isLassoActive) {
-      // Clear shop assignments but keep salesman structure
+      // When activating the lasso tool, clear all existing territory assignments
+      // but keep the salesman structure for reassignment
+      console.log('App: Activating lasso tool - clearing existing territory assignments');
+      console.log('App: Current territories before clearing:', territories);
+      
       const clearedTerritories = territories.map(territory => ({
         ...territory,
         shops: [],
@@ -167,9 +186,18 @@ function App() {
         estimatedTime: 0,
         shopCount: 0
       }));
+      
+      console.log('App: Cleared territories:', clearedTerritories);
       setTerritories(clearedTerritories);
-      setSelectedTerritory(null);
+      setSelectedTerritory(clearedTerritories[0]); // Select first territory for assignment
+      
+      console.log('App: Territories cleared, ready for lasso tool assignment');
+    } else {
+      // When deactivating the lasso tool, keep current assignments
+      console.log('App: Deactivating lasso tool - preserving current assignments');
+      console.log('App: Current territories:', territories);
     }
+    
     setIsLassoActive(!isLassoActive);
   };
 

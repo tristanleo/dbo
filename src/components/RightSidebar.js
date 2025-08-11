@@ -53,8 +53,20 @@ const RightSidebar = ({ selectedTerritory, territories, collapsed, onToggle, isL
                   className={`btn ${isLassoActive ? 'btn-primary' : 'btn-secondary'}`}
                   onClick={onLassoToggle}
                 >
-                  {isLassoActive ? '🎯 Rectangle Tool (Active)' : '🎯 Rectangle Tool'}
+                  {isLassoActive ? '🎯 Lasso Tool (Active)' : '🎯 Lasso Tool'}
                 </button>
+                {isLassoActive && (
+                  <div className="lasso-instructions">
+                    <p><strong>How to use:</strong></p>
+                    <ul>
+                      <li>Existing territories have been cleared for fresh assignment</li>
+                      <li>Click and drag to draw a free-form shape</li>
+                      <li>Release to select shops within the area</li>
+                      <li>Selected shops will be assigned to the current territory</li>
+                      <li>Repeat to build territories from scratch</li>
+                    </ul>
+                  </div>
+                )}
               </div>
             </>
           ) : (

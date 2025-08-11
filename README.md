@@ -24,6 +24,11 @@ A map-based route optimization tool for PVC pipe distributors to efficiently ass
 
 ### 3. Manual Route Adjustment
 - **Drag & Drop Interface**: Ability to move shops between territories
+- **Lasso Selection Tool**: Free-form area selection tool for assigning shops to territories
+  - Click and drag to draw custom shapes
+  - Automatically selects shops within the drawn area
+  - Visual feedback with high-visibility traces
+  - Assigns selected shops to the currently selected territory
 - **Route Planning Tools**: 
   - Click-to-add waypoints
   - Drag to reorder stops
@@ -71,12 +76,14 @@ A map-based route optimization tool for PVC pipe distributors to efficiently ass
    - Territory overlays
    - Route visualization
    - Zoom and pan controls
+   - **Lasso Tool**: Toggle button in right sidebar to activate free-form area selection
 
 4. **Right Sidebar - Route Details**
    - Selected territory details
    - Route optimization suggestions
-   - Manual adjustment tools
+   - Manual adjustment tools including Lasso Tool toggle
    - Performance metrics
+   - **Lasso Instructions**: Step-by-step guide when tool is active
 
 5. **Bottom Panel - Quick Actions**
    - Route optimization button
@@ -86,15 +93,16 @@ A map-based route optimization tool for PVC pipe distributors to efficiently ass
 ## Technical Architecture
 
 ### Frontend Technologies:
-- **Map Engine**: Leaflet.js or Mapbox for interactive mapping
+- **Map Engine**: Leaflet.js for interactive mapping
 - **UI Framework**: React.js for component-based interface
 - **Styling**: CSS Grid/Flexbox for responsive layout
-- **State Management**: Redux or Context API for route data
+- **State Management**: React hooks for route data
 
 ### Core Algorithms:
 - **Clustering**: K-means or hierarchical clustering for territory division
 - **Route Optimization**: Traveling Salesman Problem (TSP) algorithms
 - **Distance Calculation**: Haversine formula for geographic distances
+- **Lasso Selection**: Point-in-polygon algorithm for area-based shop selection
 
 ### Data Structure:
 ```javascript
@@ -135,37 +143,38 @@ A map-based route optimization tool for PVC pipe distributors to efficiently ass
 - Configure optimization preferences
 
 ### 2. Territory Assignment
-- System automatically clusters shops into territories
-- Review initial assignments
-- Make manual adjustments as needed
+- Use automatic clustering to create initial territories
+- **Lasso Tool Workflow**:
+  - Select a territory from the left sidebar
+  - Click the "🎯 Lasso Tool" button in the right sidebar
+  - Click and drag on the map to draw a custom selection area
+  - Release to automatically assign shops within the area to the selected territory
+  - Visual feedback shows the drawn area and selected shops
+- Manually adjust territories by dragging shops between areas
 
-### 3. Route Planning
-- System suggests optimal routes within each territory
-- Manually adjust route sequences
-- Review efficiency metrics
+### 3. Route Optimization
+- Review optimization suggestions
+- Manually reorder stops within territories
+- Analyze performance metrics
+- Save optimized configurations
 
-### 4. Optimization
-- Use AI suggestions to improve routes
-- Rebalance territories if needed
-- Finalize and save configuration
+## Lasso Tool Features
 
-### 5. Export & Share
-- Export route plans for salesmen
-- Generate reports and analytics
-- Share configurations with team
+### Visual Feedback:
+- **Drawing Phase**: Red dashed line follows mouse movement with high visibility
+- **Selection Phase**: Red polygon with dashed border shows selected area
+- **Duration**: Selection area remains visible for 3 seconds after completion
+- **Enhanced Styling**: 6px stroke width, glow effects, and high contrast colors
 
-## Key Benefits
+### Technical Implementation:
+- **Event Handling**: Mouse down, move, and up events for drawing
+- **Path Creation**: Dynamic polyline updates during drawing
+- **Polygon Conversion**: Automatic conversion to polygon for area calculation
+- **Shop Detection**: Point-in-polygon algorithm for accurate selection
+- **Territory Assignment**: Automatic assignment to currently selected territory
 
-1. **Visual Clarity**: Map-based interface makes territory and route planning intuitive
-2. **Flexibility**: Manual adjustment capabilities while maintaining optimization guidance
-3. **Efficiency**: Automated clustering and route optimization reduce planning time
-4. **Scalability**: Easy to adjust for different numbers of salesmen and shops
-5. **User-Friendly**: Intuitive drag-and-drop interface for non-technical users
-
-## Future Enhancements
-
-- **Real-time Updates**: Live tracking of salesman locations
-- **Mobile App**: Companion app for salesmen in the field
-- **Analytics Dashboard**: Performance metrics and insights
-- **Integration**: Connect with existing CRM or inventory systems
-- **Weather Integration**: Route adjustments based on weather conditions
+### User Experience:
+- **Intuitive Controls**: Click and drag to draw, release to select
+- **Real-time Feedback**: Visual updates during drawing process
+- **Error Handling**: Graceful fallbacks and informative console logging
+- **Accessibility**: Clear instructions and visual cues throughout the process

@@ -1,4 +1,4 @@
-.rectangle-selector {
+.lasso-selector {
   position: absolute;
   top: 10px;
   left: 50%;
@@ -7,7 +7,31 @@
   pointer-events: none;
 }
 
-.rectangle-instructions {
+.lasso-status {
+  background: rgba(52, 152, 219, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  margin-bottom: 10px;
+  animation: pulse 2s infinite;
+}
+
+.lasso-info {
+  background: rgba(46, 204, 113, 0.9);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.lasso-instructions {
   background: rgba(231, 76, 60, 0.9);
   color: white;
   padding: 8px 16px;
@@ -47,14 +71,57 @@
   cursor: crosshair !important;
 }
 
-/* Visual feedback for rectangle drawing */
-.rectangle-selector.drawing .rectangle-instructions {
+/* Visual feedback for lasso drawing */
+.lasso-selector.drawing .lasso-instructions {
   background: rgba(231, 76, 60, 0.95);
   animation: pulse 0.5s infinite;
 }
 
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
+/* Enhanced visibility for lasso traces - make them very prominent */
+.leaflet-polyline,
+.leaflet-polygon {
+  stroke-width: 4px !important;
+  stroke-opacity: 1 !important;
+  fill-opacity: 0.3 !important;
+}
+
+/* Specific styling for lasso traces - enhanced visibility */
+.lasso-trace {
+  stroke: #e74c3c !important;
+  stroke-width: 6px !important;
+  stroke-opacity: 1 !important;
+  fill: #e74c3c !important;
+  fill-opacity: 0.2 !important;
+  stroke-dasharray: 8, 4 !important;
+}
+
+/* Make sure lasso drawing is highly visible during creation */
+.leaflet-polyline.lasso-drawing {
+  stroke: #ff0000 !important;
+  stroke-width: 8px !important;
+  stroke-opacity: 1 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+  animation: lassoGlow 0.5s ease-in-out infinite alternate;
+}
+
+/* Glow effect for lasso traces */
+@keyframes lassoGlow {
+  from {
+    filter: drop-shadow(0 0 5px #ff0000);
+  }
+  to {
+    filter: drop-shadow(0 0 15px #ff0000);
+  }
+}
+
+/* Enhanced polygon visibility */
+.leaflet-polygon.lasso-complete {
+  stroke: #e74c3c !important;
+  stroke-width: 6px !important;
+  stroke-opacity: 1 !important;
+  fill: #e74c3c !important;
+  fill-opacity: 0.3 !important;
+  stroke-dasharray: 8, 4 !important;
+  filter: drop-shadow(0 0 8px rgba(231, 76, 60, 0.6));
 } 

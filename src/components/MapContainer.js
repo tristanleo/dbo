@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './MapContainer.css';
-import RectangleSelector from './LassoSelector';
+import LassoSelector from './LassoSelector';
 
 // Fix for default markers in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -29,17 +29,19 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
       }).addTo(mapInstanceRef.current);
     }
     
-    // Disable map dragging when lasso is active
+    // Only disable dragging when lasso is active, keep other controls enabled
     if (mapInstanceRef.current) {
       if (isLassoActive) {
         mapInstanceRef.current.dragging.disable();
-        mapInstanceRef.current.scrollWheelZoom.disable();
-        mapInstanceRef.current.doubleClickZoom.disable();
-        mapInstanceRef.current.touchZoom.disable();
-        mapInstanceRef.current.boxZoom.disable();
-        mapInstanceRef.current.keyboard.disable();
+        // Keep zoom and other controls enabled for better user experience
+        // mapInstanceRef.current.scrollWheelZoom.disable();
+        // mapInstanceRef.current.doubleClickZoom.disable();
+        // mapInstanceRef.current.touchZoom.disable();
+        // mapInstanceRef.current.boxZoom.disable();
+        // mapInstanceRef.current.keyboard.disable();
       } else {
         mapInstanceRef.current.dragging.enable();
+        // Ensure all controls are enabled when lasso is not active
         mapInstanceRef.current.scrollWheelZoom.enable();
         mapInstanceRef.current.doubleClickZoom.enable();
         mapInstanceRef.current.touchZoom.enable();
@@ -63,13 +65,15 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
     // Maintain map controls based on lasso state
     if (isLassoActive) {
       mapInstanceRef.current.dragging.disable();
-      mapInstanceRef.current.scrollWheelZoom.disable();
-      mapInstanceRef.current.doubleClickZoom.disable();
-      mapInstanceRef.current.touchZoom.disable();
-      mapInstanceRef.current.boxZoom.disable();
-      mapInstanceRef.current.keyboard.disable();
+      // Keep zoom and other controls enabled for better user experience
+      // mapInstanceRef.current.scrollWheelZoom.disable();
+      // mapInstanceRef.current.doubleClickZoom.disable();
+      // mapInstanceRef.current.touchZoom.disable();
+      // mapInstanceRef.current.boxZoom.disable();
+      // mapInstanceRef.current.keyboard.disable();
     } else {
       mapInstanceRef.current.dragging.enable();
+      // Ensure all controls are enabled when lasso is not active
       mapInstanceRef.current.scrollWheelZoom.enable();
       mapInstanceRef.current.doubleClickZoom.enable();
       mapInstanceRef.current.touchZoom.enable();
@@ -77,37 +81,41 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
       mapInstanceRef.current.keyboard.enable();
     }
 
-    // Add visual feedback for territory changes
-    const mapContainer = mapRef.current;
-    if (mapContainer) {
-      mapContainer.style.transition = 'opacity 0.3s ease';
-      mapContainer.style.opacity = '0.7';
-    }
-
-    // Clear existing markers and territory layers
-    Object.values(markersRef.current).forEach(marker => {
-      mapInstanceRef.current.removeLayer(marker);
-    });
-    markersRef.current = {};
-
-    // Clear all existing territory layers and labels
-    Object.values(territoryLayersRef.current).forEach(territoryData => {
-      if (territoryData.polygon) {
-        mapInstanceRef.current.removeLayer(territoryData.polygon);
-      }
-      if (territoryData.label) {
-        mapInstanceRef.current.removeLayer(territoryData.label);
-      }
-    });
-    territoryLayersRef.current = {};
-
-    // Restore opacity after a short delay
-    setTimeout(() => {
+    // Only clear and redraw map content when territories or shops actually change
+    // NOT when lasso tool is activated/deactivated
+    if (shops.length > 0 || territories.length > 0) {
+      // Add visual feedback for territory changes
+      const mapContainer = mapRef.current;
       if (mapContainer) {
-        mapContainer.style.opacity = '1';
-        mapContainer.style.transition = '';
+        mapContainer.style.transition = 'opacity 0.3s ease';
+        mapContainer.style.opacity = '0.7';
       }
-    }, 300);
+
+      // Clear existing markers and territory layers
+      Object.values(markersRef.current).forEach(marker => {
+        mapInstanceRef.current.removeLayer(marker);
+      });
+      markersRef.current = {};
+
+      // Clear all existing territory layers and labels
+      Object.values(territoryLayersRef.current).forEach(territoryData => {
+        if (territoryData.polygon) {
+          mapInstanceRef.current.removeLayer(territoryData.polygon);
+        }
+        if (territoryData.label) {
+          mapInstanceRef.current.removeLayer(territoryData.label);
+        }
+      });
+      territoryLayersRef.current = {};
+
+      // Restore opacity after a short delay
+      setTimeout(() => {
+        if (mapContainer) {
+          mapContainer.style.opacity = '1';
+          mapContainer.style.transition = '';
+        }
+      }, 300);
+    }
 
     // Add territory overlays
     territories.forEach(territory => {
@@ -261,17 +269,9 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
     return closest;
   };
 
-  const handleShopsSelected = (selectedMarkers, territoryId) => {
-    const selectedShopIds = selectedMarkers.map(marker => {
-      // Find the shop ID from the marker
-      for (const [shopId, markerRef] of Object.entries(markersRef.current)) {
-        if (markerRef === marker) {
-          return shopId;
-        }
-      }
-      return null;
-    }).filter(id => id !== null);
-    
+  const handleShopsSelected = (selectedShopIds, territoryId) => {
+    // The LassoSelector already provides shop IDs, so pass them through directly
+    console.log('MapContainer: Shops selected via lasso:', selectedShopIds, 'for territory:', territoryId);
     onShopsSelected(selectedShopIds, territoryId);
   };
 
@@ -279,7 +279,7 @@ const MapContainer = ({ shops, territories, selectedTerritory, mapData, onShopMo
     <div className={`map-container ${isLassoActive ? 'lasso-active' : ''}`}>
       <div ref={mapRef} className="map" />
       {isLassoActive && mapInstanceRef.current && (
-        <RectangleSelector 
+        <LassoSelector 
           mapInstance={mapInstanceRef.current}
           onShopsSelected={handleShopsSelected}
           selectedTerritory={selectedTerritory}
